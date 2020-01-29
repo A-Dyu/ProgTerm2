@@ -4,14 +4,15 @@ import java.util.Map;
 
 public class ExpressionParser extends BaseParser implements Parser {
     private String lastOperator;
-    private static final int topLevel = 2;
+    private boolean isEnded;
+    private static final int TOP_LEVEL = 2;
     private static final int primeLevel = 0;
     private static final Map<String, Integer> priorities = Map.of(
             "+", 2,
             "-", 2,
             "*", 1,
             "/", 1,
-            ")", topLevel + 1
+            ")", TOP_LEVEL + 1
     );
     private static final Map<Character, String> firstCharToOperator = Map.of(
             '+', "+",
@@ -23,11 +24,12 @@ public class ExpressionParser extends BaseParser implements Parser {
 
     @Override
     public TripleExpression parse(String expression) {
-        setSource(new StringSource(expression + ")"));
+        setSource(new StringSource(expression));
         nextChar();
         skipWhitespaces();
-        final TripleExpression tripleExpression = parseLevel(topLevel);
-        if (ch != '\0') {
+        isEnded = false;
+        final TripleExpression tripleExpression = parseLevel(TOP_LEVEL);
+        if (!isEnded) {
             throw error("Unexpected close bracket");
         }
         return tripleExpression;
@@ -46,7 +48,7 @@ public class ExpressionParser extends BaseParser implements Parser {
         while (lastOperator != null && priorities.get(lastOperator) == level) {
             expression = makeExpression(lastOperator, expression, parseLevel(level - 1));
         }
-        if (level == topLevel) {
+        if (level == TOP_LEVEL) {
             if (lastOperator == null || !lastOperator.equals(")")) {
                 throw error("Expected close bracket");
             }
@@ -57,7 +59,7 @@ public class ExpressionParser extends BaseParser implements Parser {
 
     private CommonExpression getPrimeExpression() {
         if (test('(')) {
-            return parseLevel(topLevel);
+            return parseLevel(TOP_LEVEL);
         } else if (test('-')) {
             skipWhitespaces();
             if (between('0', '9')) {
@@ -93,10 +95,22 @@ public class ExpressionParser extends BaseParser implements Parser {
             stringBuilder.append(ch);
             nextChar();
         }
-        return new Const(Integer.parseInt(stringBuilder.toString()));
+        try {
+            return new Const(Integer.parseInt(stringBuilder.toString()));
+        } catch (NumberFormatException e) {
+            throw error("Constant overflow");
+        }
     }
 
     private boolean testOperator() {
+        if (ch == '\0') {
+            if (isEnded) {
+                throw error("Expected close bracket");
+            }
+            isEnded = true;
+            lastOperator = ")";
+            return true;
+        }
         if (!firstCharToOperator.containsKey(ch)) {
             return false;
         }

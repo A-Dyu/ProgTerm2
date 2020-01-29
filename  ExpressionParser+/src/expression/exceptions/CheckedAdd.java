@@ -22,9 +22,7 @@ public class CheckedAdd extends AbstractBinaryOperator {
     }
 
     private void checkException(int a, int b) {
-        if (b > 0 && Integer.MAX_VALUE - b < a) {
-            throw new AddOverflowException(a, b);
-        } else if (b < 0 && Integer.MIN_VALUE - b > a) {
+        if (b > 0 && Integer.MAX_VALUE - b < a || b < 0 && Integer.MIN_VALUE - b > a) {
             throw new AddOverflowException(a, b);
         }
     }
