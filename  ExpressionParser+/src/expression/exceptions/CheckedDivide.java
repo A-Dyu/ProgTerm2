@@ -26,12 +26,12 @@ public class CheckedDivide extends AbstractBinaryOperator {
         return true;
     }
 
-    private void checkException(int a, int b) {
+    private static void checkException(int a, int b) {
         if (a == Integer.MIN_VALUE && b == -1) {
             throw new DivideOverflowException(a, b);
         }
         if (b == 0) {
-            throw new DivideByZeroException("Divide by zero: " + a + getOperator() + b);
+            throw new DivideByZeroException(a);
         }
     }
 
