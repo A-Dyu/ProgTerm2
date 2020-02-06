@@ -54,7 +54,7 @@ public class ParserTest extends BaseTest {
                 op("x--y--z", (x, y, z) -> x + y + z),
                 op("((2+2))-0/(--2)*555", (x, y, z) -> 4L),
                 op("x-x+y-y+z-(z)", (x, y, z) -> 0L),
-                op("(".repeat(450) + "x + y + (-10*-z)" + ")".repeat(450), (x, y, z) -> x + y + 10 * z),
+                op("(".repeat(500) + "x + y + (-10*-z)" + ")".repeat(500), (x, y, z) -> x + y + 10 * z),
                 op("x / y / z", (x, y, z) -> y == 0 || z == 0 ? error(DBZ) : (int) x / (int) y / z)
         );
     }
