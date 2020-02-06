@@ -4,13 +4,6 @@ import java.util.Scanner;
 
 public class Main {
     private static Scanner scanner = new Scanner(System.in);
-    private static int nextInt() {
-        while (!scanner.hasNextInt()) {
-            System.out.println("Invalid number! Please try again");
-            scanner.nextLine();
-        }
-        return scanner.nextInt();
-    }
 
     public static void main(String[] args) {
         ExpressionParser expressionParser = new ExpressionParser();
@@ -25,11 +18,13 @@ public class Main {
                 System.out.println("Please, try again");
             }
         }
-        int x = nextInt(), y = nextInt(), z = nextInt();
-        try {
-            System.out.println(expression.evaluate(x, y, z));
-        } catch (ExpressionException e) {
-            System.out.println(e.getMessage());
+        for (int x = 0; x <= 10; x++) {
+            System.out.print(x + "    ");
+            try {
+                System.out.println(expression.evaluate(x, 0, 0));
+            } catch (ExpressionException e) {
+                System.out.println(e.getMessage());
+            }
         }
     }
 }
