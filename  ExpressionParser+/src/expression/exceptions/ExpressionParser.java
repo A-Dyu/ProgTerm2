@@ -4,32 +4,28 @@ import java.util.Map;
 
 public class ExpressionParser extends BaseParser implements Parser {
     private String lastOperator;
-    private boolean isEnded;
     private static final int TOP_LEVEL = 2;
-    private static final int PRIME_LEVEL = 0;
+    private static final int PRIME_LEVEL = -1;
     private static final Map<String, Integer> PRIORITIES = Map.of(
             "+", 2,
             "-", 2,
             "*", 1,
             "/", 1,
-            ")", TOP_LEVEL + 1
+            "**", 0,
+            "//", 0
     );
-    private static final Map<Character, String> FIRST_CHAR_TO_OPERATOR = Map.of(
-            '+', "+",
-            '-', "-",
-            '*', "*",
-            '/', "/",
-            ')', ")"
+    private static final Map<Character, String> FIRST_CHAR_TO_UNARY_OPERATOR = Map.of(
+            'l', "log2",
+            'p', "pow2"
     );
 
     @Override
     public TripleExpression parse(String expression) {
         setSource(new StringSource(expression));
         nextChar();
-        skipWhitespaces();
-        isEnded = false;
+        lastOperator = null;
         final TripleExpression tripleExpression = parseLevel(TOP_LEVEL);
-        if (!isEnded) {
+        if (ch != '\0') {
             throw error("Unexpected close bracket");
         }
         return tripleExpression;
@@ -37,50 +33,71 @@ public class ExpressionParser extends BaseParser implements Parser {
 
     private CommonExpression parseLevel(int level) {
         if (level == PRIME_LEVEL) {
-            CommonExpression primeExpression = getPrimeExpression();
-            skipWhitespaces();
-            if (!testOperator()) {
-                throw error("Expected operator");
-            }
-            return primeExpression;
+            return getPrimeExpression();
         } else {
             CommonExpression expression = parseLevel(level - 1);
-            while (lastOperator != null && PRIORITIES.get(lastOperator) == level) {
-                expression = makeExpression(lastOperator, expression, parseLevel(level - 1));
-            }
-            if (level == TOP_LEVEL) {
-                if (lastOperator == null || !lastOperator.equals(")")) {
-                    throw error("Expected close bracket");
+            skipWhitespaces();
+            while (lastOperator != null || ch != '\0' && ch != ')') {
+                if (lastOperator == null) {
+                    getOperator();
                 }
-                lastOperator = null;
+                if (PRIORITIES.get(lastOperator) == level) {
+                    String op = lastOperator;
+                    lastOperator = null;
+                    expression = makeExpression(op, expression, parseLevel(level - 1));
+                    skipWhitespaces();
+                } else {
+                    break;
+                }
             }
             return expression;
         }
     }
 
+    private void getOperator() {
+        char first = ch;
+        nextChar();
+        if (PRIORITIES.containsKey(Character.toString(first) + ch)) {
+            lastOperator = Character.toString(first) + ch;
+            nextChar();
+        } else if (PRIORITIES.containsKey(Character.toString(first))) {
+            lastOperator = Character.toString(first);
+        } else {
+            throw error("Expected operator");
+        }
+    }
+
     private CommonExpression getPrimeExpression() {
-        if (test('(')) {
-            return parseLevel(TOP_LEVEL);
-        } else if (test('-')) {
-            skipWhitespaces();
+        skipWhitespaces();
+        if (ch == '(') {
+            nextChar();
+            CommonExpression expression = parseLevel(TOP_LEVEL);
+            expect(')');
+            return expression;
+        } else if (ch == '-') {
+            nextChar();
             if (between('0', '9')) {
                 return getConstExpression(true);
             } else {
                 return new CheckedNegate(getPrimeExpression());
             }
-        } else if (testOperator()) {
-            throw error("Unexpected operator");
+        } else if (FIRST_CHAR_TO_UNARY_OPERATOR.containsKey(ch)) {
+            String op = FIRST_CHAR_TO_UNARY_OPERATOR.get(ch);
+            expect(op);
+            if (between('0', '9') || between('a', 'z')) {
+                throw error("Unexpected expression after unary operator");
+            }
+            return makeExpression(op, getPrimeExpression());
         } else if (between('0', '9')) {
             return getConstExpression(false);
-        } else {
-            return getVariableExpression();
         }
+        return getVariableExpression();
     }
 
 
     private CommonExpression getVariableExpression() {
         StringBuilder stringBuilder = new StringBuilder();
-        while (between('x', 'z') || between('0', '9')) {
+        while (between('x', 'z')) {
             stringBuilder.append(ch);
             nextChar();
         }
@@ -103,29 +120,6 @@ public class ExpressionParser extends BaseParser implements Parser {
         }
     }
 
-    private boolean testOperator() {
-        if (ch == '\0') {
-            if (isEnded) {
-                throw error("Expected close bracket");
-            }
-            isEnded = true;
-            lastOperator = ")";
-            return true;
-        } else if (!FIRST_CHAR_TO_OPERATOR.containsKey(ch)) {
-            return false;
-        } else {
-            getOperator();
-            skipWhitespaces();
-            return true;
-        }
-    }
-
-    private void getOperator() {
-        String operator = FIRST_CHAR_TO_OPERATOR.get(ch);
-        expect(operator);
-        lastOperator = operator;
-    }
-
     private CommonExpression makeExpression(String operator, CommonExpression a, CommonExpression b) {
         switch (operator) {
             case "+":
@@ -136,6 +130,21 @@ public class ExpressionParser extends BaseParser implements Parser {
                 return new CheckedMultiply(a, b);
             case "/":
                 return new CheckedDivide(a, b);
+            case "**":
+                return new CheckedPow(a, b);
+            case "//":
+                return new CheckedLog(a, b);
+            default:
+                throw error("Unsupported operator: " + operator);
+        }
+    }
+
+    private CommonExpression makeExpression(String operator, CommonExpression x) {
+        switch (operator) {
+            case "log2":
+                return new CheckedLog2(x);
+            case "pow2":
+                return new CheckedPow2(x);
             default:
                 throw error("Unsupported operator: " + operator);
         }

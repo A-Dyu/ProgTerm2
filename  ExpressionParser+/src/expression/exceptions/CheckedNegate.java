@@ -1,32 +1,26 @@
 package expression.exceptions;
 
-public class CheckedNegate implements CommonExpression {
-    private CommonExpression expression;
-
+public class CheckedNegate extends AbstractUnaryOperator {
     public CheckedNegate(CommonExpression expression) {
-        this.expression = expression;
+        super(expression);
     }
 
     @Override
-    public String toString() {
-        return "-(" + expression.toString() + ")";
-    }
-
-    @Override
-    public String toMiniString() {
-        boolean hasBrackets = expression instanceof AbstractBinaryOperator;
-        return "-" + (hasBrackets ? "(" : "") + expression.toMiniString() + (hasBrackets ? ")" : "");
-    }
-
-    private static int operate(int x) {
-        checkException(x);
+    protected int operate(int x) {
+        if (checkException(x)) {
+            throw new NegateOverflowException(x);
+        }
         return -x;
     }
 
-    private static void checkException(int x) {
-        if (x == Integer.MIN_VALUE) {
-            throw new NegateOverflowException(x);
-        }
+    @Override
+    protected String getOperator() {
+        return "-";
+    }
+
+
+    static boolean checkException(int x) {
+        return x == Integer.MIN_VALUE;
     }
 
     @Override

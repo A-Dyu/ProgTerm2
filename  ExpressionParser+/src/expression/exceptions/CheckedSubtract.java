@@ -12,7 +12,9 @@ public class CheckedSubtract extends AbstractBinaryOperator {
 
     @Override
     protected int operate(int a, int b) {
-        checkException(a, b);
+        if (checkException(a, b)) {
+            throw new SubtractOverflowException(a, b);
+        }
         return a - b;
     }
 
@@ -26,10 +28,8 @@ public class CheckedSubtract extends AbstractBinaryOperator {
         return 1;
     }
 
-    private void checkException(int a, int b) {
-        if (b > 0 && Integer.MIN_VALUE + b > a || b < 0 && Integer.MAX_VALUE + b < a) {
-            throw new SubtractOverflowException(a, b);
-        }
+    static boolean checkException(int a, int b) {
+        return b > 0 && Integer.MIN_VALUE + b > a || b < 0 && Integer.MAX_VALUE + b < a;
     }
 
 }

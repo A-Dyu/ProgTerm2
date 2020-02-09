@@ -12,7 +12,9 @@ public class CheckedMultiply extends AbstractBinaryOperator {
 
     @Override
     protected int operate(int a, int b) {
-        checkException(a, b);
+        if (checkException(a, b)) {
+            throw new MultiplyOverflowException(a, b);
+        }
         return a * b;
     }
 
@@ -26,13 +28,11 @@ public class CheckedMultiply extends AbstractBinaryOperator {
         return 2;
     }
 
-    private void checkException(int a, int b) {
-        if ((a != 0 && b != 0) && (a == Integer.MIN_VALUE && b == -1 || a == -1 && b == Integer.MIN_VALUE ||
+    static boolean checkException(int a, int b) {
+        return (a != 0 && b != 0) && (a == Integer.MIN_VALUE && b == -1 || a == -1 && b == Integer.MIN_VALUE ||
                 a * b == Integer.MIN_VALUE && Integer.MIN_VALUE / b != a ||
-                        a == Integer.MIN_VALUE && b != 1 || a != 1 && b == Integer.MIN_VALUE ||
-                            a * b != Integer.MIN_VALUE && Integer.MAX_VALUE / abs(a) < abs(b))) {
-                                throw new MultiplyOverflowException(a, b);
-        }
+                a == Integer.MIN_VALUE && b != 1 || a != 1 && b == Integer.MIN_VALUE ||
+                a * b != Integer.MIN_VALUE && Integer.MAX_VALUE / abs(a) < abs(b));
     }
 
     private static int abs(int x) {

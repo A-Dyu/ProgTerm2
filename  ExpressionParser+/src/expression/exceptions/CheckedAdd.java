@@ -12,7 +12,9 @@ public class CheckedAdd extends AbstractBinaryOperator {
 
     @Override
     protected int operate(int a, int b) {
-        checkException(a, b);
+        if (checkException(a, b)) {
+            throw new AddOverflowException(a, b);
+        }
         return a + b;
     }
 
@@ -21,10 +23,8 @@ public class CheckedAdd extends AbstractBinaryOperator {
         return false;
     }
 
-    private static void checkException(int a, int b) {
-        if (b > 0 && Integer.MAX_VALUE - b < a || b < 0 && Integer.MIN_VALUE - b > a) {
-            throw new AddOverflowException(a, b);
-        }
+    static boolean checkException(int a, int b) {
+        return b > 0 && Integer.MAX_VALUE - b < a || b < 0 && Integer.MIN_VALUE - b > a;
     }
 
     @Override
