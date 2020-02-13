@@ -1,8 +1,5 @@
 package expression.exceptions;
 
-import expression.exceptions.ParserException;
-import expression.exceptions.Source;
-
 public class StringSource implements Source {
     private final String data;
     private int pos;

@@ -9,10 +9,6 @@ public class Const implements CommonExpression {
         this.val = val;
     }
 
-    public boolean isNegative() {
-        return val < 0;
-    }
-
     @Override
     public int evaluate(int x) {
         return val;

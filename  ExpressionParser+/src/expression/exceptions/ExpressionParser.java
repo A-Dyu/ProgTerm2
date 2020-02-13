@@ -96,15 +96,14 @@ public class ExpressionParser extends BaseParser implements Parser {
 
 
     private CommonExpression getVariableExpression() {
-        StringBuilder stringBuilder = new StringBuilder();
-        while (between('x', 'z')) {
-            stringBuilder.append(ch);
+        String var;
+        if (between('x', 'z')) {
+            var = Character.toString(ch);
             nextChar();
+        } else {
+            throw error("Invalid variable name");
         }
-        if (stringBuilder.length() == 0) {
-            throw error("Unsupported variable " + ch);
-        }
-        return new Variable(stringBuilder.toString());
+        return new Variable(var);
     }
 
     private CommonExpression getConstExpression(boolean isNegative) {
@@ -116,7 +115,7 @@ public class ExpressionParser extends BaseParser implements Parser {
         try {
             return new Const(Integer.parseInt(stringBuilder.toString()));
         } catch (NumberFormatException e) {
-            throw error("Constant overflow");
+            throw error("Invalid const expression");
         }
     }
 

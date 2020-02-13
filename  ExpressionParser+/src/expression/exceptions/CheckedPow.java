@@ -20,28 +20,23 @@ public class CheckedPow extends AbstractBinaryOperator {
         if (a == 0 && b == 0 || b < 0) {
             throw new PowException(a, b);
         }
-        try {
-            return binPow(a, b);
-        } catch (IllegalArgumentException e) {
-            throw new PowOverflowException(a, b);
-        }
+        return binPow(a, b);
     }
 
     private static int binPow(int a, int b) {
-        if (b == 0) {
-            return 1;
-        }
-        int ans = binPow(a, b / 2);
-        if (CheckedMultiply.checkException(ans, ans)) {
-            throw new IllegalArgumentException();
-        }
-        ans *= ans;
-        if (b % 2 == 1) {
-            if (CheckedMultiply.checkException(ans, a)) {
-                System.out.println(ans + " " + a);
-                throw new IllegalArgumentException();
+        int n = b, ans = 1, x = a;
+        while (n > 0) {
+            if (n % 2 == 1) {
+                if (CheckedMultiply.checkException(ans, x)) {
+                    throw new PowOverflowException(a, b);
+                }
+                ans *= x;
             }
-            ans *= a;
+            if (n != 1 && CheckedMultiply.checkException(x, x)) {
+                throw new PowOverflowException(a, b);
+            }
+            x *= x;
+            n = (n >> 1);
         }
         return ans;
     }

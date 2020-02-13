@@ -1,7 +1,5 @@
 package expression.exceptions;
 
-import expression.exceptions.ToMiniString;
-
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
