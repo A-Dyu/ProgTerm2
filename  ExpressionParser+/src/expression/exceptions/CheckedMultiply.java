@@ -29,10 +29,7 @@ public class CheckedMultiply extends AbstractBinaryOperator {
     }
 
     static boolean checkException(int a, int b) {
-        return (a != 0 && b != 0) && (a == Integer.MIN_VALUE && b == -1 || a == -1 && b == Integer.MIN_VALUE ||
-                a * b == Integer.MIN_VALUE && Integer.MIN_VALUE / b != a ||
-                a == Integer.MIN_VALUE && b != 1 || a != 1 && b == Integer.MIN_VALUE ||
-                a * b != Integer.MIN_VALUE && Integer.MAX_VALUE / abs(a) < abs(b));
+        return a != 0 && b != 0 && ((a * b) / a != b || (a * b) / b != a);
     }
 
     private static int abs(int x) {
