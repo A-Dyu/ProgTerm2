@@ -1,5 +1,6 @@
 package expression.exceptions;
 
+import java.util.List;
 import java.util.Map;
 
 public class ExpressionParser extends BaseParser implements Parser {
@@ -14,9 +15,9 @@ public class ExpressionParser extends BaseParser implements Parser {
             "**", 0,
             "//", 0
     );
-    private static final Map<Character, String> FIRST_CHAR_TO_UNARY_OPERATOR = Map.of(
-            'l', "log2",
-            'p', "pow2"
+    private static final List<String> UNARY_OPERATORS = List.of(
+            "log2",
+            "pow2"
     );
 
     @Override
@@ -81,29 +82,28 @@ public class ExpressionParser extends BaseParser implements Parser {
             } else {
                 return new CheckedNegate(getPrimeExpression());
             }
-        } else if (FIRST_CHAR_TO_UNARY_OPERATOR.containsKey(ch)) {
-            String op = FIRST_CHAR_TO_UNARY_OPERATOR.get(ch);
-            expect(op);
-            if (between('0', '9') || between('a', 'z')) {
-                throw error("Unexpected expression after unary operator");
-            }
-            return makeExpression(op, getPrimeExpression());
         } else if (between('0', '9')) {
             return getConstExpression(false);
+        } else {
+            StringBuilder stringBuilder = new StringBuilder();
+            while (between('a', 'z') || between('0', '9')) {
+                stringBuilder.append(ch);
+                nextChar();
+            }
+            if (UNARY_OPERATORS.contains(stringBuilder.toString())) {
+                return makeExpression(stringBuilder.toString(), getPrimeExpression());
+            } else {
+                if (checkVariable(stringBuilder.toString())) {
+                    return new Variable(stringBuilder.toString());
+                } else {
+                    throw error("Invalid variable");
+                }
+            }
         }
-        return getVariableExpression();
     }
 
-
-    private CommonExpression getVariableExpression() {
-        String var;
-        if (between('x', 'z')) {
-            var = Character.toString(ch);
-            nextChar();
-        } else {
-            throw error("Invalid variable name");
-        }
-        return new Variable(var);
+    private boolean checkVariable(String var) {
+        return var.length() == 1 && var.charAt(0) >= 'x' && var.charAt(0) <= 'z';
     }
 
     private CommonExpression getConstExpression(boolean isNegative) {
