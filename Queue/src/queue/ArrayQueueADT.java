@@ -23,10 +23,10 @@ public class ArrayQueueADT {
             resize(queue);
         }
     }
-    // Post: n' = n + 1
-    // a[n]' = element && any i: 0 <= i < n => a[i]' = a[i]
+    // Post: queue.n' = queue.n + 1
+    // queue.a[n]' = element && any i: 0 <= i < queue.n => queue.a[i]' = queue.a[i]
 
-    // Pre: n > 0
+    // Pre: queue.n > 0
     // queue != null
     public static Object dequeue(ArrayQueueADT queue) {
         Object val = queue.elements[queue.tail];
@@ -37,22 +37,22 @@ public class ArrayQueueADT {
         }
         return val;
     }
-    // Post: n' = n - 1
-    // any i: 0 <= i < n' => a[i]' = a[i + 1]
-    // R = a[0]
+    // Post: queue.n' = queue.n - 1
+    // any i: 0 <= i < queue.n' => queue.a[i]' = queue.a[i + 1]
+    // R = queue.a[0]
 
     // Pre: queue != null
     public static void clear(ArrayQueueADT queue) {
         queue.elements = new Object[2];
         queue.tail = queue.head = 0;
     }
-    // Post: n = 0
+    // Post: queue.n = 0
 
     // Pre: queue != null
     public static Object element(ArrayQueueADT queue) {
         return queue.elements[queue.tail];
     }
-    // Post: R = a[0]
+    // Post: R = queue.a[0]
 
     // Pre: queue != null
     public static int size(ArrayQueueADT queue) {
@@ -64,7 +64,7 @@ public class ArrayQueueADT {
     public static boolean isEmpty(ArrayQueueADT queue) {
         return queue.head == queue.tail;
     }
-    // Post: R = (n == 0)
+    // Post: R = (queue.n == 0)
 
     private static void resize(ArrayQueueADT queue) {
         Object[] nw = new Object[(size(queue) + 1) * 2];
