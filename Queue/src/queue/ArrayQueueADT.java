@@ -1,5 +1,7 @@
 package queue;
 
+import java.util.Arrays;
+
 // Inv: a[0].. a[n - 1]
 // n >= 0
 // any i: 0 <= i < n => a[i] != null
@@ -13,6 +15,7 @@ public class ArrayQueueADT {
     }
 
     // Pre: element != null
+    // queue != null
     public static void enqueue(ArrayQueueADT queue, Object element) {
         queue.elements[queue.head] = element;
         queue.head = (queue.head + 1) % queue.elements.length;
@@ -24,6 +27,7 @@ public class ArrayQueueADT {
     // a[n]' = element && any i: 0 <= i < n => a[i]' = a[i]
 
     // Pre: n > 0
+    // queue != null
     public static Object dequeue(ArrayQueueADT queue) {
         Object val = queue.elements[queue.tail];
         queue.elements[queue.tail] = null;
@@ -37,22 +41,26 @@ public class ArrayQueueADT {
     // any i: 0 <= i < n' => a[i]' = a[i + 1]
     // R = a[0]
 
+    // Pre: queue != null
     public static void clear(ArrayQueueADT queue) {
         queue.elements = new Object[2];
         queue.tail = queue.head = 0;
     }
     // Post: n = 0
 
+    // Pre: queue != null
     public static Object element(ArrayQueueADT queue) {
         return queue.elements[queue.tail];
     }
     // Post: R = a[0]
 
+    // Pre: queue != null
     public static int size(ArrayQueueADT queue) {
         return queue.head >= queue.tail ? queue.head - queue.tail : queue.elements.length - queue.tail + queue.head;
     }
     // Post: R = n
 
+    // Pre: queue != null
     public static boolean isEmpty(ArrayQueueADT queue) {
         return queue.head == queue.tail;
     }
@@ -60,8 +68,11 @@ public class ArrayQueueADT {
 
     private static void resize(ArrayQueueADT queue) {
         Object[] nw = new Object[(size(queue) + 1) * 2];
-        for (int i = 0; i < size(queue); i++) {
-            nw[i] = queue.elements[(queue.tail + i) % queue.elements.length];
+        if (queue.head >= queue.tail) {
+            System.arraycopy(queue.elements, queue.tail, nw, 0, size(queue));
+        }   else {
+            System.arraycopy(queue.elements, queue.tail, nw, 0, queue.elements.length - queue.tail);
+            System.arraycopy(queue.elements, 0, nw, queue.elements.length - queue.tail, queue.head);
         }
         queue.head = size(queue);
         queue.tail = 0;

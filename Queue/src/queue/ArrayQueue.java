@@ -61,8 +61,11 @@ public class ArrayQueue {
 
     private void resize() {
         Object[] nw = new Object[(size() + 1) * 2];
-        for (int i = 0; i < size(); i++) {
-            nw[i] = elements[(tail + i) % elements.length];
+        if (head >= tail) {
+            System.arraycopy(elements, tail, nw, 0, size());
+        }   else {
+            System.arraycopy(elements, tail, nw, 0, elements.length - tail);
+            System.arraycopy(elements, 0, nw, elements.length - tail, head);
         }
         head = size();
         tail = 0;
