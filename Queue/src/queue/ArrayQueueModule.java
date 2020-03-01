@@ -9,6 +9,8 @@ public class ArrayQueueModule {
     private static Object[] elements = new Object[2];
 
     // Pre: element != null
+    // Post: n' = n + 1
+    // a[n]' = element && any i: 0 <= i < n => a[i]' = a[i]
     public static void enqueue(Object element) {
         elements[head] = element;
         head = (head + 1) % elements.length;
@@ -16,10 +18,11 @@ public class ArrayQueueModule {
             resize();
         }
     }
-    // Post: n' = n + 1
-    // a[n]' = element && any i: 0 <= i < n => a[i]' = a[i]
 
     // Pre: n > 0
+    // Post: n' = n - 1
+    // any i: 0 <= i < n' => a[i]' = a[i + 1]
+    // R = a[0]
     public static Object dequeue() {
         Object val = elements[tail];
         elements[tail] = null;
@@ -29,11 +32,10 @@ public class ArrayQueueModule {
         }
         return val;
     }
-    // Post: n' = n - 1
-    // any i: 0 <= i < n' => a[i]' = a[i + 1]
-    // R = a[0]
 
     // Pre: element != null
+    // Post: n' = n + 1
+    // a[0]' = element && any i: 0 < i <= n => a[i]' = a[i - 1]
     public static void push(Object element) {
         tail = (tail == 0 ? elements.length - 1 : tail - 1);
         elements[tail] = element;
@@ -41,10 +43,11 @@ public class ArrayQueueModule {
             resize();
         }
     }
-    // Post: n' = n + 1
-    // a[0]' = element && any i: 0 < i <= n => a[i]' = a[i - 1]
 
     // Pre: n > 0
+    // Post: n' = n - 1
+    // any i: 0 <= i < n' => a[i]' = a[i]
+    // R = a[n - 1]
     public static Object remove() {
         head = (head == 0 ? elements.length - 1 : head - 1);
         Object val = elements[head];
@@ -54,48 +57,53 @@ public class ArrayQueueModule {
         }
         return val;
     }
-    // Post: n' = n - 1
-    // any i: 0 <= i < n' => a[i]' = a[i]
-    // R = a[n - 1]
 
+    // Post: n = 0
     public static void clear() {
         elements = new Object[2];
         tail = head = 0;
     }
-    // Post: n = 0
 
+    // Pre: n > 0
+    // Post: R = a[0]
+    // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     public static Object element() {
         return elements[tail];
     }
-    // Post: R = a[0]
 
     // Pre: 0 <= ind < n
+    // Post: R = a[ind]
+    // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     public static Object get(int ind) {
         return elements[(tail + ind) % elements.length];
     }
-    //Post: R = a[ind]
 
     // Pre: 0 <= ind < n
     // element != null
+    // Post: a[ind] = element
+    // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     public static void set(int ind, Object element) {
         elements[(tail + ind) % elements.length] = element;
     }
-    // Post: a[ind] = element
 
+    // Pre: n > 0
+    // Post: R = a[n - 1]
+    // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     public static Object peek() {
         return elements[(head == 0 ? elements.length - 1 : head - 1)];
     }
-    // Post: R = a[n - 1]
 
+    // Post: R = n
+    // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     public static int size() {
         return head >= tail ? head - tail : elements.length - tail + head;
     }
-    // Post: R = n
 
+    // Post: R = (n == 0)
+    // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     public static boolean isEmpty() {
         return head == tail;
     }
-    // Post: R = (n == 0)
 
     private static void resize() {
         Object[] nw = new Object[(size() + 1) * 2];
