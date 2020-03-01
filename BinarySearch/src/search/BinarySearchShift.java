@@ -4,7 +4,8 @@ public class BinarySearchShift {
         // Pre: any i: args[i] -> Integer &&
         // exists k in [0, .. args.length] : any i, j : [0.. k) && i < j => args[i] < args[j]
         // any i, j : [k, args.length) && i < j => args[i] < args[j]
-        // min(args[i]: i in [0.. k)) > max(args[j]: j in [k, args.length)
+        // min(args[i]: i in [0.. k)) > max(args[j]: j in [k, args.length))
+        // Post: k in [0.. a.size())
         public static void main(String[] args) {
         int[] a = new int[args.length];
         for (int i = 0; i < args.length; i++) {
@@ -14,11 +15,12 @@ public class BinarySearchShift {
         //int r = recursiveBinarySearch(a, -1, a.size());
         // if k = a.length => any i, j in [0.. a.length) i < j => a[i] < a[j] => exists k' = 0
         System.out.println((r == a.length ? 0 : r));
-    }   // Post: k in [0.. a.size())
+    }
 
     // Pre: exists k in [0, .. a.length] : any i, j : [0.. k) && i < j => a[i] < a[j]
     // any i, j : [k, a.length) && i < j => a[i] < a[j]
     // min(a[i]: i in [0.. k)) > max(a[j]: j in [k, a.length)
+    // Post: r = k && 0 < k <= a.size()
     private static int iterativeBinarySearch(int[] a) {
         int l = -1, r = a.length;
         // Inv: l < k && r >= k
@@ -43,12 +45,13 @@ public class BinarySearchShift {
         // (r - l = 1)
         // l < k && r >= k && r - l == 1 => r = k
         return r;
-    }  // Post: r = k && 0 <= k <= a.size()
+    }
 
     // Pre: exists k in [0, .. a.length] : any i, j : [0.. k) && i < j => a[i] < a[j]
     // any i, j : [k, a.length) && i < j => a[i] < a[j]
     // min(a[i]: i in [0.. k)) > max(a[j]: j in [k, a.length)
-    // Inv: l < k && r >= k
+    // l < k && r >= k && l >= -1 && r <= a.size()
+    // Post: r = k && 0 < k <= a.size()
     private static int recursiveBinarySearch(int[] a, int l, int r) {
         if (r - l > 1) {
             // r - l > 1
@@ -73,5 +76,5 @@ public class BinarySearchShift {
             // l < k && r >= k && r - l == 1 => r = k
             return r;
         }
-    }   // Post: r = k && 0 <= k <= a.size()
+    }
 }
