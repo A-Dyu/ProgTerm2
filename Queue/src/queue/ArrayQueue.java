@@ -5,7 +5,7 @@ package queue;
 // any i: 0 <= i < n => a[i] != null
 public class ArrayQueue {
     private int tail;
-    private int head;
+    private int size;
     private Object[] elements;
 
     public ArrayQueue() {
@@ -16,9 +16,9 @@ public class ArrayQueue {
     // Post: n' = n + 1
     // a[n]' = element && any i: 0 <= i < n => a[i]' = a[i]
     public void enqueue(Object element) {
-        elements[head] = element;
-        head = (head + 1) % elements.length;
-        if ((head + 1) % elements.length == tail) {
+        elements[(tail + size) % elements.length] = element;
+        size++;
+        if (size == elements.length) {
             resize();
         }
     }
@@ -28,10 +28,11 @@ public class ArrayQueue {
     // any i: 0 <= i < n' => a[i]' = a[i + 1]
     // R = a[0]
     public Object dequeue() {
+        size--;
         Object val = elements[tail];
         elements[tail] = null;
         tail = (tail + 1) % elements.length;
-        if (size() < elements.length / 4) {
+        if (size < elements.length / 4) {
             resize();
         }
         return val;
@@ -41,9 +42,10 @@ public class ArrayQueue {
     // Post: n' = n + 1
     // a[0]' = element && any i: 0 < i <= n => a[i]' = a[i - 1]
     public void push(Object element) {
+        size++;
         tail = (tail == 0 ? elements.length - 1 : tail - 1);
         elements[tail] = element;
-        if ((head + 1) % elements.length == tail) {
+        if (size == elements.length) {
             resize();
         }
     }
@@ -53,10 +55,10 @@ public class ArrayQueue {
     // any i: 0 <= i < n' => a[i]' = a[i]
     // R = a[n - 1]
     public Object remove() {
-        head = (head == 0 ? elements.length - 1 : head - 1);
-        Object val = elements[head];
-        elements[head] = null;
-        if (size() < elements.length / 4) {
+        size--;
+        Object val = elements[(tail + size) % elements.length];
+        elements[(tail + size) % elements.length] = null;
+        if (size < elements.length / 4) {
             resize();
         }
         return val;
@@ -65,7 +67,7 @@ public class ArrayQueue {
     // Post: n = 0
     public void clear() {
         elements = new Object[2];
-        tail = head = 0;
+        tail = size = 0;
     }
 
     // Pre: n > 0
@@ -94,30 +96,29 @@ public class ArrayQueue {
     // Post: R = a[n - 1]
     // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     public Object peek() {
-        return elements[(head == 0 ? elements.length - 1 : head - 1)];
+        return elements[(tail + size - 1) % elements.length];
     }
 
     // Post: R = n
     // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     public int size() {
-        return head >= tail ? head - tail : elements.length - tail + head;
+        return size;
     }
 
     // Post: R = (n == 0)
     // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     public boolean isEmpty() {
-        return head == tail;
+        return size == 0;
     }
 
     private void resize() {
         Object[] nw = new Object[(size() + 1) * 2];
-        if (head >= tail) {
+        if (tail + size < elements.length) {
             System.arraycopy(elements, tail, nw, 0, size());
         }   else {
             System.arraycopy(elements, tail, nw, 0, elements.length - tail);
-            System.arraycopy(elements, 0, nw, elements.length - tail, head);
+            System.arraycopy(elements, 0, nw, elements.length - tail, (tail + size) % elements.length);
         }
-        head = size();
         tail = 0;
         elements = nw;
     }

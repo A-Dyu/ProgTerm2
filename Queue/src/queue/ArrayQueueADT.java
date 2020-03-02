@@ -5,7 +5,7 @@ package queue;
 // any i: 0 <= i < n => a[i] != null
 public class ArrayQueueADT {
     private int tail;
-    private int head;
+    private int size;
     private Object[] elements;
 
     public ArrayQueueADT() {
@@ -17,9 +17,9 @@ public class ArrayQueueADT {
     // Post: queue.n' = queue.n + 1
     // queue.a[n]' = element && any i: 0 <= i < queue.n => queue.a[i]' = queue.a[i]
     public static void enqueue(ArrayQueueADT queue, Object element) {
-        queue.elements[queue.head] = element;
-        queue.head = (queue.head + 1) % queue.elements.length;
-        if ((queue.head + 1) % queue.elements.length == queue.tail) {
+        queue.elements[(queue.tail + queue.size) % queue.elements.length] = element;
+        queue.size++;
+        if (queue.size == queue.elements.length) {
             resize(queue);
         }
     }
@@ -29,10 +29,11 @@ public class ArrayQueueADT {
     // Post: queue.n' = queue.n - 1
     // any i: 0 <= i < queue.n' => queue.a[i]' = queue.a[i + 1]
     // R = queue.a[0]
-    public static Object queue(ArrayQueueADT queue) {
+    public static Object dequeue(ArrayQueueADT queue) {
         Object val = queue.elements[queue.tail];
         queue.elements[queue.tail] = null;
         queue.tail = (queue.tail + 1) % queue.elements.length;
+        queue.size--;
         if (size(queue) < queue.elements.length / 4) {
             resize(queue);
         }
@@ -46,7 +47,8 @@ public class ArrayQueueADT {
     public static void push(ArrayQueueADT queue, Object element) {
         queue.tail = (queue.tail == 0 ? queue.elements.length - 1 : queue.tail - 1);
         queue.elements[queue.tail] = element;
-        if ((queue.head + 1) % queue.elements.length == queue.tail) {
+        queue.size++;
+        if (queue.size == queue.elements.length) {
             resize(queue);
         }
     }
@@ -57,10 +59,10 @@ public class ArrayQueueADT {
     // any i: 0 <= i < n' => a[i]' = a[i]
     // R = a[n - 1]
     public static Object remove(ArrayQueueADT queue) {
-        queue.head = (queue.head == 0 ? queue.elements.length - 1 : queue.head - 1);
-        Object val = queue.elements[queue.head];
-        queue.elements[queue.head] = null;
-        if (size(queue) < queue.elements.length / 4) {
+        queue.size--;
+        Object val = queue.elements[(queue.tail + queue.size) % queue.elements.length];
+        queue.elements[(queue.tail + queue.size) % queue.elements.length] = null;
+        if (queue.size < queue.elements.length / 4) {
             resize(queue);
         }
         return val;
@@ -70,7 +72,7 @@ public class ArrayQueueADT {
     // Post: n = 0
     public static void clear(ArrayQueueADT queue) {
         queue.elements = new Object[2];
-        queue.tail = queue.head = 0;
+        queue.tail = queue.size = 0;
     }
 
     // Pre: queue != null && queue.n > 0
@@ -100,32 +102,33 @@ public class ArrayQueueADT {
     // Post: R = a[n - 1]
     // queue.n' = queue.n && any i: 0 <= i < queue.n => queue.a[i]' = queue.a[i]
     public static Object peek(ArrayQueueADT queue) {
-        return queue.elements[(queue.head == 0 ? queue.elements.length - 1 : queue.head - 1)];
+        return queue.elements[(queue.tail + queue.size - 1) % queue.elements.length];
     }
 
     // Pre: queue != null
     // Post: R = n
     // queue.n' = queue.n && any i: 0 <= i < queue.n => queue.a[i]' = queue.a[i]
     public static int size(ArrayQueueADT queue) {
-        return queue.head >= queue.tail ? queue.head - queue.tail : queue.elements.length - queue.tail + queue.head;
+        return queue.size;
     }
 
     // Pre: queue != null
     // Post: R = (n == 0)
     // queue.n' = queue.n && any i: 0 <= i < queue.n => queue.a[i]' = queue.a[i]
     public static boolean isEmpty(ArrayQueueADT queue) {
-        return queue.head == queue.tail;
+        return queue.size == 0;
     }
 
     private static void resize(ArrayQueueADT queue) {
         Object[] nw = new Object[(size(queue) + 1) * 2];
-        if (queue.head >= queue.tail) {
+        if (queue.tail + queue.size < queue.elements.length) {
             System.arraycopy(queue.elements, queue.tail, nw, 0, size(queue));
         }   else {
             System.arraycopy(queue.elements, queue.tail, nw, 0, queue.elements.length - queue.tail);
-            System.arraycopy(queue.elements, 0, nw, queue.elements.length - queue.tail, queue.head);
+            System.arraycopy(queue.elements, 0,
+                    nw, queue.elements.length - queue.tail,
+                    (queue.tail + queue.size) % queue.elements.length);
         }
-        queue.head = size(queue);
         queue.tail = 0;
         queue.elements = nw;
     }
