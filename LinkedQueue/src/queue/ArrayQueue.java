@@ -41,9 +41,9 @@ public class ArrayQueue extends AbstractQueue {
     }
 
     private void resize() {
-        Object[] nw = new Object[(size() + 1) * 2];
+        Object[] nw = new Object[(size + 1) * 2];
         if (tail + size < elements.length) {
-            System.arraycopy(elements, tail, nw, 0, size());
+            System.arraycopy(elements, tail, nw, 0, size);
         }   else {
             System.arraycopy(elements, tail, nw, 0, elements.length - tail);
             System.arraycopy(elements, 0, nw, elements.length - tail, (tail + size) % elements.length);

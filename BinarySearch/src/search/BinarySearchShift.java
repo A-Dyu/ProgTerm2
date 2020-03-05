@@ -4,7 +4,7 @@ public class BinarySearchShift {
         // Pre: any i: args[i] -> Integer &&
         // exists k in [0, .. args.length] : any i, j : [0.. k) && i < j => args[i] < args[j]
         // any i, j : [k, args.length) && i < j => args[i] < args[j]
-        // min(args[i]: i in [0.. k)) > max(args[j]: j in [k, args.length))
+        // (k > 0 && k < args.length) => a[0] > a[k]
         // Post: k in [0.. a.size())
         public static void main(String[] args) {
         int[] a = new int[args.length];
@@ -19,7 +19,7 @@ public class BinarySearchShift {
 
     // Pre: exists k in [0, .. a.length] : any i, j : [0.. k) && i < j => a[i] < a[j]
     // any i, j : [k, a.length) && i < j => a[i] < a[j]
-    // min(a[i]: i in [0.. k)) > max(a[j]: j in [k, a.length)
+    // (k > 0 && k < args.length) => a[0] > a[k]
     // Post: r = k && 0 < k <= a.size()
     private static int iterativeBinarySearch(int[] a) {
         int l = -1, r = a.length;
@@ -49,7 +49,7 @@ public class BinarySearchShift {
 
     // Pre: exists k in [0, .. a.length] : any i, j : [0.. k) && i < j => a[i] < a[j]
     // any i, j : [k, a.length) && i < j => a[i] < a[j]
-    // min(a[i]: i in [0.. k)) > max(a[j]: j in [k, a.length)
+    // (k > 0 && k < args.length) => a[0] > a[k]
     // l < k && r >= k && l >= -1 && r <= a.size()
     // Post: r = k && 0 < k <= a.size()
     private static int recursiveBinarySearch(int[] a, int l, int r) {
