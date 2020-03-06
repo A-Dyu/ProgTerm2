@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static queue.QueueIfWhileTest.*;
+
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
-public class QueueIfWhileTest extends QueueTest<QueueIfWhileTest.QueueIfWhile> {
+public class QueueIfWhileTest extends QueueTest<QueueIfWhile> {
     public QueueIfWhileTest() {
         super(QueueIfWhile.class, ReferenceQueueIfWhile::new);
     }

@@ -52,7 +52,7 @@ public class ArrayQueue extends AbstractQueue {
                 for (int j = i + 1; j < size; j++) {
                     elements[(tail + i) % elements.length] = null;
                 }
-                size = i + 1;
+                size = i;
                 break;
             }
         }

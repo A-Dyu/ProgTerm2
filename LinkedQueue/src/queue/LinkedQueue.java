@@ -13,6 +13,7 @@ public class LinkedQueue extends AbstractQueue {
         } else {
             Node newHead = new Node(element);
             head.setNext(newHead);
+            newHead.setPrev(head);
             head = newHead;
         }
         size++;

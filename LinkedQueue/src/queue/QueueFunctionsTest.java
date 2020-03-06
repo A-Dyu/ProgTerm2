@@ -5,10 +5,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static queue.QueueFunctionsTest.*;
+
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
-public class QueueFunctionsTest extends QueueTest<QueueFunctionsTest.QueueFunctions> {
+public class QueueFunctionsTest extends QueueTest<QueueFunctions> {
     public QueueFunctionsTest() {
         super(QueueFunctions.class, ReferenceQueueFunctions::new);
     }
