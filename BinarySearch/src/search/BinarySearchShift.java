@@ -31,12 +31,12 @@ public class BinarySearchShift {
             if (a[m] < a[0]) {
                 // a[m] < a[0] => m >= k
                 r = m;
-                // a[r'] < k
+                // r' >= k
                 // r' - l < r - l
             } else {
                 // a[m] > a[0] => m < k
                 l = m;
-                // a[l'] < k
+                // l' < k
                 // r - l' < r - l
             }
             // r' - l' < r - l
@@ -50,7 +50,7 @@ public class BinarySearchShift {
     // Pre: exists k in (0, .. a.length] : any i, j : [0.. k) && i < j => a[i] < a[j]
     // any i, j : [k, a.length) && i < j => a[i] < a[j]
     // k < args.length => a[0] > a[k]
-    // l < k && r >= k && l >= 0 && r <= a.size()
+    // 0 <= l < k <= <= a.length
     // Post: R = k
     private static int recursiveBinarySearch(int[] a, int l, int r) {
         if (r - l > 1) {
@@ -58,8 +58,8 @@ public class BinarySearchShift {
             int m = (l + r) / 2;
             // l < m && m < r
             if (a[m] < a[0]) {
-                // a[m] < a[0] => m >= k
-                r = m;
+                    // a[m] < a[0] => m >= k
+                l = m;
                 // r' >= k
                 // r' - l < r - l
             } else {
@@ -68,8 +68,9 @@ public class BinarySearchShift {
                 // l' < k
                 // r - l' < r - l
             }
+
             // r' - l' < r - l
-            // r > l
+            // r' > l'
             return recursiveBinarySearch(a, l, r);
         } else {
             // r - l == 1

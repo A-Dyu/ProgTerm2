@@ -1,5 +1,7 @@
 package queue;
 
+import java.util.function.Predicate;
+
 // Inv: a[0].. a[n - 1]
 // n >= 0
 // any i: 0 <= i < n => a[i] != null
@@ -30,4 +32,12 @@ public interface Queue {
     // Post: R = (n == 0)
     // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     boolean isEmpty();
+
+    void removeIf(Predicate<Object> predicate);
+
+    void retainIf(Predicate<Object> predicate);
+
+    void takeWhile(Predicate<Object> predicate);
+
+    void dropWhile(Predicate<Object> predicate);
 }

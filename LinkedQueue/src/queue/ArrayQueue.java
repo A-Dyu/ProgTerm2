@@ -1,5 +1,7 @@
 package queue;
 
+import java.util.function.Predicate;
+
 public class ArrayQueue extends AbstractQueue {
     private int tail;
     private Object[] elements;
@@ -27,6 +29,33 @@ public class ArrayQueue extends AbstractQueue {
             resize();
         }
         return val;
+    }
+
+    @Override
+    public void retainIf(Predicate<Object> predicate) {
+        Object[] nw = new Object[elements.length];
+        int newSize = 0;
+        for (int i = 0; i < size; i++) {
+            if (predicate.test(elements[(tail + i) % elements.length])) {
+                nw[newSize++] = elements[(tail + i) % elements.length];
+            }
+        }
+        elements = nw;
+        tail = 0;
+        size = newSize;
+    }
+
+    @Override
+    public void takeWhile(Predicate<Object> predicate) {
+        for (int i = 0; i < size; i++) {
+            if (!predicate.test(elements[(tail + i) % elements.length])) {
+                for (int j = i + 1; j < size; j++) {
+                    elements[(tail + i) % elements.length] = null;
+                }
+                size = i + 1;
+                break;
+            }
+        }
     }
 
     @Override
