@@ -33,11 +33,25 @@ public interface Queue {
     // n' = n && any i: 0 <= i < n => a[i]' = a[i]
     boolean isEmpty();
 
+    // Pre: predicate != null
+    // Post: queue' = a[0..n'-1]': exists sequence i_0,...,i_n'-1:
+    // every i_j: 0 <= i_j < n && predicate(a[i_j]) = false && a[i_j] = a[j]'
+    // if predicate(a[k]) = false -> k in sequence i_j
     void removeIf(Predicate<Object> predicate);
 
+    // Pre: predicate != null
+    // Post: queue' = a[0..n'-1]': exists sequence i_0,...,i_n'-1:
+    // every i_j: 0 <= i_j < n && predicate(a[i_j]) = true && a[i_j] = a[j]'
+    // if predicate(a[k]) = true -> k in sequence i_j
     void retainIf(Predicate<Object> predicate);
 
+    // Pre: predicate != null
+    // Post: queue' = a[0..n'-1]: every i: 0 <= i < n' && a[i] = a[i]' && predicate(a[i]) = true
+    // (predicate(a[n']) = false || n' = n)
     void takeWhile(Predicate<Object> predicate);
 
+    // Pre: predicate != null
+    // Post: exists k: 0 <= k <= n && (k == n || predicate(a[k]) = false) && every i: 0 <= i < k -> predicate(a[i]) = true
+    // n' = n - k && every i: 0 <= i < n' -> a[i]' = a[i + k]
     void dropWhile(Predicate<Object> predicate);
 }

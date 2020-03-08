@@ -28,4 +28,30 @@ abstract public class AbstractQueue implements Queue {
             dequeue();
         }
     }
+
+    @Override
+    public void retainIf(Predicate<Object> predicate) {
+        int sz = size;
+        for (int i = 0; i < sz; i++) {
+            Object element = dequeue();
+            if (predicate.test(element)) {
+                enqueue(element);
+            }
+        }
+    }
+
+    @Override
+    public void takeWhile(Predicate<Object> predicate) {
+        int sz = size;
+        boolean take = true;
+        for (int i = 0; i < sz; i++) {
+            Object element = dequeue();
+            if (!predicate.test(element)) {
+                take = false;
+            }
+            if (take) {
+                enqueue(element);
+            }
+        }
+    }
 }
