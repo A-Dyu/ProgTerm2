@@ -1,6 +1,6 @@
 package expression.parser;
 
-import expression.expressions.*;
+import expression.parser.expressions.*;
 import expression.parser.operator.*;
 import java.util.Map;
 
@@ -8,7 +8,7 @@ public class ExpressionParser<T extends Number> extends BaseParser {
     private String lastOperator;
     private static final int TOP_LEVEL = 2;
     private static final int PRIME_LEVEL = 0;
-    private Operator modeOperator;
+    private final Operator<T> modeOperator;
     private static final Map<String, Integer> PRIORITIES = Map.of(
             "+", 2,
             "-", 2,
@@ -16,8 +16,11 @@ public class ExpressionParser<T extends Number> extends BaseParser {
             "/", 1
     );
 
-    public CommonExpression<T> parse(String expression, String mode) {
-        setModeOperator(mode);
+    public ExpressionParser(Operator<T> modeOperator) {
+        this.modeOperator = modeOperator;
+    }
+
+    public CommonExpression<T> parse(String expression) {
         setSource(new StringSource(expression));
         nextChar();
         lastOperator = null;
@@ -76,7 +79,7 @@ public class ExpressionParser<T extends Number> extends BaseParser {
             if (between('0', '9')) {
                 return getConstExpression(true);
             } else {
-                return new Negate<T>(getPrimeExpression(), modeOperator);
+                return new Negate<>(getPrimeExpression(), modeOperator);
             }
         } else if (between('0', '9')) {
             return getConstExpression(false);
@@ -87,7 +90,7 @@ public class ExpressionParser<T extends Number> extends BaseParser {
                 nextChar();
             }
             if (checkVariable(stringBuilder.toString())) {
-                return new Variable<T>(stringBuilder.toString(), modeOperator);
+                return new Variable<>(stringBuilder.toString(), modeOperator);
             } else {
                 throw error("Invalid variable");
             }
@@ -105,7 +108,7 @@ public class ExpressionParser<T extends Number> extends BaseParser {
             nextChar();
         }
         try {
-            return new Const(modeOperator.parse(stringBuilder.toString()));
+            return new Const<>(modeOperator.parse(stringBuilder.toString()));
         } catch (NumberFormatException e) {
             throw error("Invalid const expression");
         }
@@ -114,13 +117,13 @@ public class ExpressionParser<T extends Number> extends BaseParser {
     private CommonExpression<T> makeExpression(String operator, CommonExpression<T> a, CommonExpression<T> b) {
         switch (operator) {
             case "+":
-                return new Add<T>(a, b, modeOperator);
+                return new Add<>(a, b, modeOperator);
             case "-":
-                return new Subtract<T>(a, b, modeOperator);
+                return new Subtract<>(a, b, modeOperator);
             case "*":
-                return new Multiply<T>(a, b, modeOperator);
+                return new Multiply<>(a, b, modeOperator);
             case "/":
-                return new Divide<T>(a, b, modeOperator);
+                return new Divide<>(a, b, modeOperator);
             default:
                 throw error("Unsupported operator: " + operator);
         }
@@ -129,22 +132,6 @@ public class ExpressionParser<T extends Number> extends BaseParser {
     private void skipWhitespaces() {
         while (Character.isWhitespace(ch)) {
             nextChar();
-        }
-    }
-
-    private void setModeOperator(String mode) {
-        switch (mode) {
-            case "i":
-                modeOperator = new IntegerOperator();
-                break;
-            case "d":
-                modeOperator = new DoubleOperator();
-                break;
-            case "bi":
-                modeOperator = new BigIntegerOperator();
-                break;
-            default:
-                throw error("Unsupported mode");
         }
     }
 }

@@ -1,4 +1,4 @@
-package expression.expressions;
+package expression.parser.expressions;
 
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)

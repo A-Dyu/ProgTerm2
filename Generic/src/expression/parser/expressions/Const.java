@@ -1,4 +1,4 @@
-package expression.expressions;
+package expression.parser.expressions;
 
 import java.util.Objects;
 

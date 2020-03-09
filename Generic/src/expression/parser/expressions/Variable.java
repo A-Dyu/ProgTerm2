@@ -1,4 +1,4 @@
-package expression.expressions;
+package expression.parser.expressions;
 
 import expression.parser.exceptions.ExpressionException;
 import java.util.Objects;

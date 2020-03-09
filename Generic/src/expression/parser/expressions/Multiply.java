@@ -1,15 +1,15 @@
-package expression.expressions;
+package expression.parser.expressions;
 
 import expression.parser.operator.*;
 
-public class Add<T extends Number> extends AbstractBinaryOperator<T> {
-    public Add(CommonExpression<T> a, CommonExpression<T> b, final Operator<T> operator) {
+public class Multiply<T extends Number> extends AbstractBinaryOperator<T> {
+    public Multiply(CommonExpression<T> a, CommonExpression<T> b, final Operator<T> operator) {
         super(a, b, operator);
     }
 
     @Override
     protected String getOperator() {
-        return " + ";
+        return " * ";
     }
 
     @Override
@@ -19,11 +19,11 @@ public class Add<T extends Number> extends AbstractBinaryOperator<T> {
 
     @Override
     public int getPriority() {
-        return 1;
+        return 2;
     }
 
     @Override
     protected T operate(T a, T b) {
-        return operator.add(a, b);
+        return operator.multiply(a, b);
     }
 }
