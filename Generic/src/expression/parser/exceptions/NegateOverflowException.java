@@ -1,7 +1,7 @@
 package expression.parser.exceptions;
 
 public class NegateOverflowException extends OperateOverflowException {
-    public <T extends Number>NegateOverflowException(T x) {
+    public NegateOverflowException(Number x) {
         super("Negate", "-" + x);
     }
 }

@@ -1,7 +1,7 @@
 package expression.parser.exceptions;
 
 public class AddOverflowException extends OperateOverflowException {
-    public <T extends Number>AddOverflowException(T a, T b) {
+    public AddOverflowException(Number a, Number b) {
         super("Add", a + " + " + b);
     }
 }

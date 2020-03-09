@@ -22,7 +22,7 @@ public class IntegerOperator implements Operator<Integer> {
     @Override
     public Integer multiply(Integer a, Integer b) {
         if (a != 0 && b != 0 && ((a * b) / a != b || (a * b) / b != a)) {
-            throw new DivideOverflowException(a, b);
+            throw new MultiplyOverflowException(a, b);
         }
         return a * b;
     }
