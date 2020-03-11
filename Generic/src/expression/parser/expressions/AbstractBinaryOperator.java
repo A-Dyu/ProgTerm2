@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import expression.parser.operator.*;
 
-public abstract class AbstractBinaryOperator<T extends Number> implements CommonExpression<T> {
+public abstract class AbstractBinaryOperator<T> implements CommonExpression<T> {
     private CommonExpression<T> a;
     private CommonExpression<T> b;
     protected final Operator<T> operator;
@@ -32,32 +32,6 @@ public abstract class AbstractBinaryOperator<T extends Number> implements Common
     @Override
     public String toString() {
         return "(" + a + getOperator()+ b + ')';
-    }
-
-    private String getExpression(Expression a, boolean isInBrackets) {
-        return (isInBrackets ? "(" : "") + a.toMiniString() + (isInBrackets ? ")" : "");
-    }
-
-    private boolean checkPriorityBrackets(Expression a) {
-        return ((a instanceof AbstractBinaryOperator) && ((AbstractBinaryOperator) a).getPriority() < this.getPriority());
-    }
-
-    private boolean checkOrderAdditionBrackets(Expression a) {
-        if (a instanceof AbstractBinaryOperator) {
-            AbstractBinaryOperator binA = (AbstractBinaryOperator) a;
-            if (binA.isOrdered() && binA.getPriority() <= this.getPriority()) {
-                return true;
-            }
-            return (this.isOrdered()) && (binA.getPriority() <= this.getPriority());
-        }
-        return false;
-    }
-
-    @Override
-    public String toMiniString() {
-        return getExpression(a, checkPriorityBrackets(a)) +
-                getOperator() +
-                getExpression(b, checkPriorityBrackets(b) || checkOrderAdditionBrackets(b));
     }
 
     @Override

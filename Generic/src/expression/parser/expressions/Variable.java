@@ -4,7 +4,7 @@ import expression.parser.exceptions.ExpressionException;
 import java.util.Objects;
 import expression.parser.operator.*;
 
-public class Variable<T extends Number> implements CommonExpression<T> {
+public class Variable<T> implements CommonExpression<T> {
     private String var;
     private final Operator<T> operator;
 
@@ -21,11 +21,6 @@ public class Variable<T extends Number> implements CommonExpression<T> {
     @Override
     public String toString() {
         return var;
-    }
-
-    @Override
-    public String toMiniString() {
-        return this.toString();
     }
 
     @Override

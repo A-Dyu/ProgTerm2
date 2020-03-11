@@ -1,4 +1,4 @@
 package expression.parser.expressions;
 
-public interface CommonExpression<T extends Number> extends Expression<T>, TripleExpression<T> {
+public interface CommonExpression<T> extends Expression<T>, TripleExpression<T> {
 }

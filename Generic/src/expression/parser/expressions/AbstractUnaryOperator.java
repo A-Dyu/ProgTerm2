@@ -2,7 +2,7 @@ package expression.parser.expressions;
 
 import expression.parser.operator.*;
 
-abstract public class AbstractUnaryOperator<T extends Number> implements CommonExpression<T> {
+abstract public class AbstractUnaryOperator<T> implements CommonExpression<T> {
     protected final Operator<T> operator;
     public AbstractUnaryOperator(CommonExpression<T> expression, final Operator<T> operator) {
         this.expression = expression;
@@ -27,10 +27,5 @@ abstract public class AbstractUnaryOperator<T extends Number> implements CommonE
     @Override
     public String toString() {
         return getOperator() + "(" + expression + ")";
-    }
-
-    @Override
-    public String toMiniString() {
-        return getOperator() + expression.toMiniString();
     }
 }

@@ -20,7 +20,7 @@ public class GenericTabulator implements Tabulator {
         return makeTable(MODES.get(mode), expression, x1, x2, y1, y2, z1, z2);
     }
 
-    private <T extends Number> Object[][][] makeTable(Operator<T> operator, String expression, int x1, int x2, int y1, int y2, int z1, int z2) {
+    private <T> Object[][][] makeTable(Operator<T> operator, String expression, int x1, int x2, int y1, int y2, int z1, int z2) {
         ExpressionParser<T> parser = new ExpressionParser<>(operator);
         CommonExpression commonExpression = parser.parse(expression);
         Object[][][] ans = new Object[x2 - x1 + 1][y2 - y1 + 1][z2 - z1 + 1];

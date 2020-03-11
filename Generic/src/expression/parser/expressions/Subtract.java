@@ -2,7 +2,7 @@ package expression.parser.expressions;
 
 import expression.parser.operator.*;
 
-public class Subtract<T extends Number> extends AbstractBinaryOperator<T> {
+public class Subtract<T> extends AbstractBinaryOperator<T> {
     public Subtract(CommonExpression<T> a, CommonExpression<T> b, Operator<T> operator) {
         super(a, b, operator);
     }

@@ -1,6 +1,6 @@
 package expression.parser.operator;
 
-public interface Operator<T extends Number> {
+public interface Operator<T> {
     T add(T a, T b);
     T subtract(T a, T b);
     T multiply(T a, T b);

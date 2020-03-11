@@ -2,7 +2,7 @@ package expression.parser.expressions;
 
 import java.util.Objects;
 
-public class Const<T extends Number> implements CommonExpression<T> {
+public class Const<T> implements CommonExpression<T> {
     private T val;
 
     public Const(T val) {
@@ -12,11 +12,6 @@ public class Const<T extends Number> implements CommonExpression<T> {
     @Override
     public String toString() {
         return val.toString();
-    }
-
-    @Override
-    public String toMiniString() {
-        return this.toString();
     }
 
     @Override

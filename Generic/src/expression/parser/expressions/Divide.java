@@ -2,7 +2,7 @@ package expression.parser.expressions;
 
 import expression.parser.operator.*;
 
-public class Divide<T extends Number> extends AbstractBinaryOperator<T> {
+public class Divide<T> extends AbstractBinaryOperator<T> {
     public Divide(CommonExpression<T> a, CommonExpression<T> b, final Operator<T> operator) {
         super(a, b, operator);
     }

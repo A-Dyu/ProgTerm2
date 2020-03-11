@@ -4,7 +4,7 @@ import expression.parser.expressions.*;
 import expression.parser.operator.*;
 import java.util.Map;
 
-public class ExpressionParser<T extends Number> extends BaseParser {
+public class ExpressionParser<T> extends BaseParser {
     private String lastOperator;
     private static final int TOP_LEVEL = 2;
     private static final int PRIME_LEVEL = 0;

@@ -1,7 +1,7 @@
 package expression.parser.exceptions;
 
 public class DivideOverflowException extends OperateOverflowException {
-    public DivideOverflowException(Number a, Number b) {
+    public DivideOverflowException(Object a, Object b) {
         super("Divide", a + " / " + b);
     }
 }

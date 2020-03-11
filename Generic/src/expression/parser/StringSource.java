@@ -1,6 +1,5 @@
 package expression.parser;
 
-import expression.parser.Source;
 import expression.parser.exceptions.ParserException;
 
 public class StringSource implements Source {
