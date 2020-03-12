@@ -14,8 +14,8 @@ public class Variable<T> implements CommonExpression<T> {
     }
 
     @Override
-    public T evaluate(int x) {
-        return operator.parse(x);
+    public T evaluate(T x) {
+        return x;
     }
 
     @Override
@@ -36,15 +36,15 @@ public class Variable<T> implements CommonExpression<T> {
     }
 
     @Override
-    public T evaluate(int x, int y, int z) {
+    public T evaluate(T x, T y, T z) {
         if (var.equals("x")) {
-            return operator.parse(x);
+            return x;
         }
         if (var.equals("y")) {
-            return operator.parse(y);
+            return y;
         }
         if (var.equals("z")) {
-            return operator.parse(z);
+            return z;
         }
         throw new ExpressionException("Unexpected variable " + var);
     }

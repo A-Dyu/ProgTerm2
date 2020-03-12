@@ -22,12 +22,12 @@ public abstract class AbstractBinaryOperator<T> implements CommonExpression<T> {
     protected abstract boolean isOrdered();
 
     @Override
-    public T evaluate(int x) {
+    public T evaluate(T x) {
         return operate(a.evaluate(x), b.evaluate(x));
     }
 
     @Override
-    public T evaluate(int x, int y, int z) { return operate(a.evaluate(x, y, z), b.evaluate(x, y, z));}
+    public T evaluate(T x, T y, T z) { return operate(a.evaluate(x, y, z), b.evaluate(x, y, z));}
 
     @Override
     public String toString() {

@@ -15,12 +15,12 @@ abstract public class AbstractUnaryOperator<T> implements CommonExpression<T> {
     protected abstract String getOperator();
 
     @Override
-    public T evaluate(int x) {
+    public T evaluate(T x) {
         return operate(expression.evaluate(x));
     }
 
     @Override
-    public T evaluate(int x, int y, int z) {
+    public T evaluate(T x, T y, T z) {
         return operate(expression.evaluate(x, y, z));
     }
 
