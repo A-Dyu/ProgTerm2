@@ -22,8 +22,23 @@ public class DoubleOperator implements Operator<Double> {
     }
 
     @Override
+    public Double min(Double a, Double b) {
+        return Double.min(a, b);
+    }
+
+    @Override
+    public Double max(Double a, Double b) {
+        return Double.max(a, b);
+    }
+
+    @Override
     public Double negate(Double x) {
         return -x;
+    }
+
+    @Override
+    public Double count(Double x) {
+        return (double) Long.bitCount(Double.doubleToLongBits(x));
     }
 
     @Override
@@ -33,6 +48,6 @@ public class DoubleOperator implements Operator<Double> {
 
     @Override
     public Double parse(int value) {
-        return (Double) (double) value;
+        return (double) value;
     }
 }

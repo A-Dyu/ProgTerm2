@@ -29,8 +29,23 @@ public class BigIntegerOperator implements Operator<BigInteger> {
     }
 
     @Override
+    public BigInteger min(BigInteger a, BigInteger b) {
+        return a.min(b);
+    }
+
+    @Override
+    public BigInteger max(BigInteger a, BigInteger b) {
+        return a.max(b);
+    }
+
+    @Override
     public BigInteger negate(BigInteger x) {
         return x.negate();
+    }
+
+    @Override
+    public BigInteger count(BigInteger x) {
+        return BigInteger.valueOf(x.bitCount());
     }
 
     @Override

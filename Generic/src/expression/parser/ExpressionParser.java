@@ -2,18 +2,25 @@ package expression.parser;
 
 import expression.parser.expressions.*;
 import expression.parser.operator.*;
+
+import java.util.List;
 import java.util.Map;
 
 public class ExpressionParser<T> extends BaseParser {
     private String lastOperator;
-    private static final int TOP_LEVEL = 2;
+    private static final int TOP_LEVEL = 3;
     private static final int PRIME_LEVEL = 0;
     private final Operator<T> modeOperator;
     private static final Map<String, Integer> PRIORITIES = Map.of(
+            "min", 3,
+            "max", 3,
             "+", 2,
             "-", 2,
             "*", 1,
             "/", 1
+    );
+    private static final List<String> UNARY_OPERATORS = List.of(
+            "count"
     );
 
     public ExpressionParser(Operator<T> modeOperator) {
@@ -55,15 +62,15 @@ public class ExpressionParser<T> extends BaseParser {
     }
 
     private void getOperator() {
-        char first = ch;
-        nextChar();
-        if (PRIORITIES.containsKey(Character.toString(first) + ch)) {
-            lastOperator = Character.toString(first) + ch;
+        StringBuilder stringBuilder = new StringBuilder();
+        while (ch != '\0' && !PRIORITIES.containsKey(stringBuilder.toString()) && stringBuilder.length() <= 3) {
+            stringBuilder.append(ch);
             nextChar();
-        } else if (PRIORITIES.containsKey(Character.toString(first))) {
-            lastOperator = Character.toString(first);
-        } else {
+        }
+        if (!PRIORITIES.containsKey(stringBuilder.toString())) {
             throw error("Expected operator");
+        } else {
+            lastOperator = stringBuilder.toString();
         }
     }
 
@@ -89,7 +96,9 @@ public class ExpressionParser<T> extends BaseParser {
                 stringBuilder.append(ch);
                 nextChar();
             }
-            if (checkVariable(stringBuilder.toString())) {
+            if (UNARY_OPERATORS.contains(stringBuilder.toString())) {
+                return makeExpression(stringBuilder.toString(), getPrimeExpression());
+            } else if (checkVariable(stringBuilder.toString())) {
                 return new Variable<>(stringBuilder.toString(), modeOperator);
             } else {
                 throw error("Invalid variable");
@@ -124,6 +133,19 @@ public class ExpressionParser<T> extends BaseParser {
                 return new Multiply<>(a, b, modeOperator);
             case "/":
                 return new Divide<>(a, b, modeOperator);
+            case "min":
+                return new Min<>(a, b, modeOperator);
+            case "max":
+                return new Max<>(a, b, modeOperator);
+            default:
+                throw error("Unsupported operator: " + operator);
+        }
+    }
+
+    private CommonExpression<T> makeExpression(String operator, CommonExpression<T> x) {
+        switch (operator) {
+            case "count":
+                return new Count<>(x, modeOperator);
             default:
                 throw error("Unsupported operator: " + operator);
         }

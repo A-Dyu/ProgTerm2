@@ -9,10 +9,13 @@ import expression.parser.operator.*;
 import java.util.Map;
 
 public class GenericTabulator implements Tabulator {
-    private static final Map<String, Operator<? extends Number>> MODES = Map.of(
-                "i", new IntegerOperator(),
+    private static final Map<String, Operator<?>> MODES = Map.of(
+                "i", new IntegerOperator(true),
                 "d", new DoubleOperator(),
-                "bi", new BigIntegerOperator()
+                "bi", new BigIntegerOperator(),
+                "u", new IntegerOperator(false),
+                "f", new FloatOperator(),
+                "b", new ByteOperator()
             );
 
     @Override
