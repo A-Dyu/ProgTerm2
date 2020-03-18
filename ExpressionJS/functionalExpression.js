@@ -18,16 +18,16 @@ symbolToOperation["/"] = divide;
 
 function parse (expression) {
     let stack = [];
-    expression.split(" ").filter(s => s.trim() !== "").forEach(parseToken);
-    function parseToken(token) {
+    const parseToken = token => {
         if (symbolToOperation[token] !== undefined) {
             let b = stack.pop(), a = stack.pop();
             stack.push(symbolToOperation[token](a, b));
         } else if (token === "x") {
             stack.push(variable(token));
-        } else {
+        } else if (token !== "") {
             stack.push(cnst(+token));
         }
-    }
+    };
+    expression.split(" ").forEach(parseToken);
     return stack.pop();
 }
