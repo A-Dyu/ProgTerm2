@@ -24,10 +24,10 @@ function parse (expression) {
             stack.push(symbolToOperation[token](a, b));
         } else if (token === "x") {
             stack.push(variable(token));
-        } else if (token !== "") {
+        } else {
             stack.push(cnst(+token));
         }
     };
-    expression.split(" ").forEach(parseToken);
+    expression.trim().split(/\s+/).forEach(parseToken);
     return stack.pop();
 }
