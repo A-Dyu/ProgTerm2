@@ -8,8 +8,8 @@ import expression.parser.operator.*;
 
 import java.util.Map;
 
-public class GenericTabulator implements Tabulator {
-    private static final Map<String, Operator<?>> MODES = Map.of(
+public class GenericTabulator <T> implements Tabulator {
+    private static final Map<String, Operator> MODES = Map.of(
                 "i", new IntegerOperator(true),
                 "d", new DoubleOperator(),
                 "bi", new BigIntegerOperator(),
@@ -20,10 +20,8 @@ public class GenericTabulator implements Tabulator {
 
     @Override
     public Object[][][] tabulate(String mode, String expression, int x1, int x2, int y1, int y2, int z1, int z2) {
-        return makeTable(MODES.get(mode), expression, x1, x2, y1, y2, z1, z2);
-    }
-
-    private <T> Object[][][] makeTable(Operator<T> operator, String expression, int x1, int x2, int y1, int y2, int z1, int z2) {
+        @SuppressWarnings("unchecked")
+        Operator<T> operator = MODES.get(mode);
         ExpressionParser<T> parser = new ExpressionParser<>(operator);
         CommonExpression<T> commonExpression = parser.parse(expression);
         Object[][][] ans = new Object[x2 - x1 + 1][y2 - y1 + 1][z2 - z1 + 1];
@@ -32,9 +30,7 @@ public class GenericTabulator implements Tabulator {
                 for (int z = 0; z <= z2 - z1; z++) {
                     try {
                         ans[x][y][z] = commonExpression.evaluate(operator.parse(x + x1), operator.parse(y + y1), operator.parse(z + z1));
-                    } catch (ExpressionException e) {
-                        ans[x][y][z] = null;
-                    }
+                    } catch (ExpressionException ignored) {}
                 }
             }
         }
