@@ -1,21 +1,16 @@
 package expression.parser.expressions;
 
-import expression.parser.exceptions.ExpressionException;
+import expression.exceptions.ExpressionException;
 import java.util.Objects;
 import expression.parser.operator.*;
 
-public class Variable<T> implements CommonExpression<T> {
+public class Variable<T> implements GenericExpression<T> {
     private String var;
     private final Operator<T> operator;
 
     public Variable(String var, final Operator<T> operator) {
         this.var = var;
         this.operator = operator;
-    }
-
-    @Override
-    public T evaluate(T x) {
-        return x;
     }
 
     @Override

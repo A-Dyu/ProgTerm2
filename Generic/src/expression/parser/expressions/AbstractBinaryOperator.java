@@ -4,12 +4,12 @@ import java.util.Objects;
 
 import expression.parser.operator.*;
 
-public abstract class AbstractBinaryOperator<T> implements CommonExpression<T> {
-    private CommonExpression<T> a;
-    private CommonExpression<T> b;
+public abstract class AbstractBinaryOperator<T> implements GenericExpression<T> {
+    private GenericExpression<T> a;
+    private GenericExpression<T> b;
     protected final Operator<T> operator;
 
-    public AbstractBinaryOperator(CommonExpression<T> a, CommonExpression<T> b, final Operator<T> operator) {
+    public AbstractBinaryOperator(GenericExpression<T> a, GenericExpression<T> b, final Operator<T> operator) {
         this.a = a;
         this.b = b;
         this.operator = operator;
@@ -20,11 +20,6 @@ public abstract class AbstractBinaryOperator<T> implements CommonExpression<T> {
     protected abstract int getPriority();
     protected abstract T operate(T a, T b);
     protected abstract boolean isOrdered();
-
-    @Override
-    public T evaluate(T x) {
-        return operate(a.evaluate(x), b.evaluate(x));
-    }
 
     @Override
     public T evaluate(T x, T y, T z) { return operate(a.evaluate(x, y, z), b.evaluate(x, y, z));}

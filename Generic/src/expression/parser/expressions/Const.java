@@ -2,7 +2,7 @@ package expression.parser.expressions;
 
 import java.util.Objects;
 
-public class Const<T> implements CommonExpression<T> {
+public class Const<T> implements GenericExpression<T> {
     private T val;
 
     public Const(T val) {
@@ -25,11 +25,6 @@ public class Const<T> implements CommonExpression<T> {
     @Override
     public int hashCode() {
         return Objects.hash(val);
-    }
-
-    @Override
-    public T evaluate(T x) {
-        return val;
     }
 
     @Override

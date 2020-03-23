@@ -1,6 +1,6 @@
 package expression.parser.operator;
 
-import expression.parser.exceptions.DivideByZeroException;
+import expression.exceptions.DivideByZeroException;
 
 import java.math.BigInteger;
 

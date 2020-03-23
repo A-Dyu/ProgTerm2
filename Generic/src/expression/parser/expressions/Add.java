@@ -3,7 +3,7 @@ package expression.parser.expressions;
 import expression.parser.operator.*;
 
 public class Add<T> extends AbstractBinaryOperator<T> {
-    public Add(CommonExpression<T> a, CommonExpression<T> b, final Operator<T> operator) {
+    public Add(GenericExpression<T> a, GenericExpression<T> b, final Operator<T> operator) {
         super(a, b, operator);
     }
 

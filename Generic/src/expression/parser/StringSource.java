@@ -1,6 +1,6 @@
 package expression.parser;
 
-import expression.parser.exceptions.ParserException;
+import expression.exceptions.ParserException;
 
 public class StringSource implements Source {
     private final String data;

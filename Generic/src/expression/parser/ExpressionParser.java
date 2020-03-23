@@ -27,22 +27,22 @@ public class ExpressionParser<T> extends BaseParser {
         this.modeOperator = modeOperator;
     }
 
-    public CommonExpression<T> parse(String expression) {
+    public GenericExpression<T> parse(String expression) {
         setSource(new StringSource(expression));
         nextChar();
         lastOperator = null;
-        final CommonExpression<T> commonExpression = parseLevel(TOP_LEVEL);
+        final GenericExpression<T> genericExpression = parseLevel(TOP_LEVEL);
         if (ch != '\0') {
             throw error("Unexpected close bracket");
         }
-        return commonExpression;
+        return genericExpression;
     }
 
-    private CommonExpression<T> parseLevel(int level) {
+    private GenericExpression<T> parseLevel(int level) {
         if (level == PRIME_LEVEL) {
             return getPrimeExpression();
         } else {
-            CommonExpression<T> expression = parseLevel(level - 1);
+            GenericExpression<T> expression = parseLevel(level - 1);
             skipWhitespaces();
             while (lastOperator != null || ch != '\0' && ch != ')') {
                 if (lastOperator == null) {
@@ -74,11 +74,11 @@ public class ExpressionParser<T> extends BaseParser {
         }
     }
 
-    private CommonExpression<T> getPrimeExpression() {
+    private GenericExpression<T> getPrimeExpression() {
         skipWhitespaces();
         if (ch == '(') {
             nextChar();
-            CommonExpression<T> expression = parseLevel(TOP_LEVEL);
+            GenericExpression<T> expression = parseLevel(TOP_LEVEL);
             expect(')');
             return expression;
         } else if (ch == '-') {
@@ -110,7 +110,7 @@ public class ExpressionParser<T> extends BaseParser {
         return var.length() == 1 && var.charAt(0) >= 'x' && var.charAt(0) <= 'z';
     }
 
-    private CommonExpression<T> getConstExpression(boolean isNegative) {
+    private GenericExpression<T> getConstExpression(boolean isNegative) {
         StringBuilder stringBuilder = new StringBuilder(isNegative ? "-" : "");
         while (between('0', '9')) {
             stringBuilder.append(ch);
@@ -123,7 +123,7 @@ public class ExpressionParser<T> extends BaseParser {
         }
     }
 
-    private CommonExpression<T> makeExpression(String operator, CommonExpression<T> a, CommonExpression<T> b) {
+    private GenericExpression<T> makeExpression(String operator, GenericExpression<T> a, GenericExpression<T> b) {
         switch (operator) {
             case "+":
                 return new Add<>(a, b, modeOperator);
@@ -142,7 +142,7 @@ public class ExpressionParser<T> extends BaseParser {
         }
     }
 
-    private CommonExpression<T> makeExpression(String operator, CommonExpression<T> x) {
+    private GenericExpression<T> makeExpression(String operator, GenericExpression<T> x) {
         switch (operator) {
             case "count":
                 return new Count<>(x, modeOperator);

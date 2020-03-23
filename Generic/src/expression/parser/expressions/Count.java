@@ -3,7 +3,7 @@ package expression.parser.expressions;
 import expression.parser.operator.Operator;
 
 public class Count<T> extends AbstractUnaryOperator<T> {
-    public Count(CommonExpression<T> expression, Operator<T> operator) {
+    public Count(GenericExpression<T> expression, Operator<T> operator) {
         super(expression, operator);
     }
 

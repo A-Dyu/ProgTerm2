@@ -3,7 +3,7 @@ package expression.parser.expressions;
 import expression.parser.operator.*;
 
 public class Negate<T> extends AbstractUnaryOperator<T> {
-    public Negate(CommonExpression<T> expression, Operator<T> operator) {
+    public Negate(GenericExpression<T> expression, Operator<T> operator) {
         super(expression, operator);
     }
 

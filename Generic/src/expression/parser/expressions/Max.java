@@ -3,7 +3,7 @@ package expression.parser.expressions;
 import expression.parser.operator.Operator;
 
 public class Max<T> extends AbstractBinaryOperator<T> {
-    public Max(CommonExpression<T> a, CommonExpression<T> b, Operator<T> operator) {
+    public Max(GenericExpression<T> a, GenericExpression<T> b, Operator<T> operator) {
         super(a, b, operator);
     }
 

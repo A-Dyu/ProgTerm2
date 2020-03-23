@@ -3,7 +3,7 @@ package expression.parser.expressions;
 import expression.parser.operator.Operator;
 
 public class Min<T> extends AbstractBinaryOperator<T> {
-    public Min(CommonExpression<T> a, CommonExpression<T> b, Operator<T> operator) {
+    public Min(GenericExpression<T> a, GenericExpression<T> b, Operator<T> operator) {
         super(a, b, operator);
     }
 

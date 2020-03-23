@@ -1,6 +1,6 @@
 package expression.parser;
 
-import expression.parser.exceptions.ParserException;
+import expression.exceptions.ParserException;
 
 public class BaseParser {
     protected Source source;

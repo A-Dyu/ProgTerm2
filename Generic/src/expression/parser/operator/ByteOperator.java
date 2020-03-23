@@ -1,6 +1,6 @@
 package expression.parser.operator;
 
-import expression.parser.exceptions.DivideByZeroException;
+import expression.exceptions.DivideByZeroException;
 
 public class ByteOperator implements Operator<Byte> {
     @Override
