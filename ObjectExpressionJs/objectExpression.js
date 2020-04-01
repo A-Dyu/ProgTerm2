@@ -1,11 +1,22 @@
 "use strict";
 
+function createExpression(_evaluate, _toString, _diff) {
+    this.prototype.evaluate = _evaluate;
+    this.prototype.toString = _toString;
+    this.prototype.diff = _diff;
+}
+
 function Const(value) {
     this._value = value;
 }
-Const.prototype.evaluate = function() { return +this._value};
-Const.prototype.toString = function() { return "" + this._value};
-Const.prototype.diff = function() { return new Const(0)};
+createExpression.call(Const,
+    function() { return +this._value},
+    function() { return "" + this._value},
+    function() { return ZERO});
+
+const ZERO = new Const(0);
+const ONE = new Const(1);
+const TWO = new Const(2);
 
 const varIndex = {
     "x": 0,
@@ -14,69 +25,81 @@ const varIndex = {
 };
 function Variable(name) {
     this._name = name;
+    this._ind = varIndex[name];
 }
-Variable.prototype.evaluate = function(...vars) { return vars[varIndex[this._name]]};
-Variable.prototype.toString = function() { return this._name};
-Variable.prototype.diff = function(name) { return new Const(this._name === name ? 1 : 0)};
-
+createExpression.call(Variable,
+    function(...vars) { return vars[this._ind]},
+    function() { return this._name},
+    function(name) { return this._name === name ? ONE : ZERO});
 
 function Operation(...args) {
     this._args = args;
 }
-Operation.prototype.evaluate = function(...vars) { return this._op(...this._args.map(val => val.evaluate(...vars)))};
-Operation.prototype.toString = function() { return this._args.slice().reduce((total, v) => total + " " + v.toString()) + " " + this._operator};
-Operation.prototype.diff = function (name) { return this._diffRule(name, ...this._args) };
+createExpression.call(Operation,
+    function(...vars) { return this._op(...this._args.map(val => val.evaluate(...vars)))},
+    function() { return this._args.slice().reduce((total, v) => total + " " + v.toString()) + " " + this._operator},
+    function (name) { return this._diffRule(name, ...this._args)});
+
+function createOperation(_op, _operator, _diffRule) {
+    this.prototype = Object.create(Operation.prototype);
+    this.prototype._op = _op;
+    this.prototype._operator = _operator;
+    this.prototype._diffRule = _diffRule;
+}
 
 function Negate(x) {
     Operation.call(this, x);
 }
-Negate.prototype = Object.create(Operation.prototype);
-Negate.prototype._op = x => -x;
-Negate.prototype._operator = "negate";
-Negate.prototype._diffRule = function(name, x) { return new Negate(x.diff(name))};
+createOperation.call(Negate, x => -x, "negate",
+    function(name, x) { return new Negate(x.diff(name))});
 
 function Add(x, y) {
     Operation.call(this, x, y);
 }
-Add.prototype = Object.create(Operation.prototype);
-Add.prototype._op = (a, b) => a + b;
-Add.prototype._operator = "+";
-Add.prototype._diffRule = function(name, a, b) { return new Add(a.diff(name), b.diff(name))};
+createOperation.call(Add, (a, b) => a + b, "+",
+    function(name, a, b) { return new Add(a.diff(name), b.diff(name))});
 
 function Subtract(x, y) {
     Operation.call(this, x, y);
 }
-Subtract.prototype = Object.create(Operation.prototype);
-Subtract.prototype._op = (a, b) => a - b;
-Subtract.prototype._operator = "-";
-Subtract.prototype._diffRule = function(name, a, b) { return new Subtract(a.diff(name), b.diff(name))};
+createOperation.call(Subtract, (a, b) => a - b, "-",
+    function(name, a, b) { return new Subtract(a.diff(name), b.diff(name))});
 
 function Multiply(x, y) {
     Operation.call(this, x, y);
 }
-Multiply.prototype = Object.create(Operation.prototype);
-Multiply.prototype._op = (a, b) => a * b;
-Multiply.prototype._operator = "*";
-Multiply.prototype._diffRule = function(name, a, b) { return new Add(
-    new Multiply(a.diff(name), b), new Multiply(a, b.diff(name)))};
+createOperation.call(Multiply, (a, b) => a * b, "*",
+    function(name, a, b) { return new Add(
+        new Multiply(a.diff(name), b), new Multiply(a, b.diff(name)))});
 
 function Divide(x, y) {
     Operation.call(this, x, y);
 }
-Divide.prototype = Object.create(Operation.prototype);
-Divide.prototype._op = (a, b) => a / b;
-Divide.prototype._operator = "/";
-Divide.prototype._diffRule = function(name, a, b) { return new Divide(
-    new Subtract(new Multiply(a.diff(name), b), new Multiply(a, b.diff(name))),
-    new Multiply(b, b)
-)};
+createOperation.call(Divide, (a, b) => a / b, "/",
+    function(name, a, b) { return new Divide(
+        new Subtract(new Multiply(a.diff(name), b), new Multiply(a, b.diff(name))),
+        new Multiply(b, b))});
+
+function Gauss(a, b, c, x) {
+    Operation.call(this, a, b, c, x);
+}
+createOperation.call(Gauss, (a, b, c, x) => a * Math.exp(-(x - b) * (x - b) / (2 * c * c)), "gauss",
+    function(name, a, b, c, x) { return new Add(
+        new Multiply(a.diff(name), new Gauss(ONE, b, c, x)),
+        new Multiply(
+            a, new Multiply(
+                new Gauss(ONE, b, c, x), Negate.prototype._diffRule(
+                    name, new Divide(
+                        new Multiply(new Subtract(x, b), new Subtract(x, b)),
+                        new Multiply(TWO, new Multiply(c, c)))))))});
 
 const tokenToOperation = {
     "negate": Negate,
     "+": Add,
     "-": Subtract,
     "*": Multiply,
-    "/": Divide
+    "/": Divide,
+    "gauss": Gauss
 };
 
 function parse(expression) {

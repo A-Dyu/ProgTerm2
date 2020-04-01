@@ -9,24 +9,29 @@ const tokenToConst = {
     "two": two
 };
 
+const getVar = ind => (...vars) => vars[ind];
 const varIndex = {
-    "x" : 0,
-    "y" : 1,
-    "z" : 2
+    "x" : getVar(0),
+    "y" : getVar(1),
+    "z" : getVar(2)
 };
-const variable = name => (...vars) => vars[varIndex[name]];
+const variable = name => varIndex[name];
 
-const operation = (op, ...args) => (...vars) => op(...args.map(val => val(...vars)));
+const operation = op => {
+    let func = (...args) => (...vars) => op(...args.map(val => val(...vars)));
+    func.argsAmount = op.length;
+    return func;
+};
 
-const negate = x => operation(x => -x, x);
-const abs = x => operation(Math.abs, x);
+const negate = operation(x => -x);
+const abs = operation(Math.abs);
 
-const multiply = (a, b) => operation((a, b) => a * b, a, b);
-const subtract = (a, b) => operation((a, b) => a - b, a, b);
-const add = (a, b) => operation((a, b) => a + b, a, b);
-const divide = (a, b) => operation((a, b) => a / b, a, b);
+const multiply = operation((a, b) => a * b);
+const subtract = operation((a, b) => a - b);
+const add = operation((a, b) => a + b);
+const divide = operation((a, b) => a / b);
 
-const iff = (a, b, c) => operation((a, b, c) => a >= 0 ? b : c, a, b, c);
+const iff = operation((a, b, c) => a >= 0 ? b : c);
 
 const tokenToOperation = {
     "negate": negate,
@@ -42,7 +47,7 @@ function parse (expression) {
     let stack = [];
     const parseToken = token => {
         if (token in tokenToOperation) {
-            stack.push(tokenToOperation[token](...stack.splice(-tokenToOperation[token].length)));
+            stack.push(tokenToOperation[token](...stack.splice(-tokenToOperation[token].argsAmount)));
         } else if (token in varIndex) {
             stack.push(variable(token));
         } else if (token in tokenToConst) {
