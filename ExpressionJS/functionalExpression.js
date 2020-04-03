@@ -5,21 +5,21 @@ const cnst = value => () => +value;
 const one = cnst(1);
 const two = cnst(2);
 const tokenToConst = {
-    "one": one,
-    "two": two
+    one: one,
+    two: two
 };
 
 const getVar = ind => (...vars) => vars[ind];
 const varIndex = {
-    "x" : getVar(0),
-    "y" : getVar(1),
-    "z" : getVar(2)
+    x: getVar(0),
+    y: getVar(1),
+    z: getVar(2)
 };
 const variable = name => varIndex[name];
 
 const operation = op => {
     let func = (...args) => (...vars) => op(...args.map(val => val(...vars)));
-    func.argsAmount = op.length;
+    func.argsCount = op.length;
     return func;
 };
 
@@ -45,9 +45,10 @@ const tokenToOperation = {
 
 function parse (expression) {
     let stack = [];
-    const parseToken = token => {
+    for (const token of expression.trim().split(/\s+/)) {
         if (token in tokenToOperation) {
-            stack.push(tokenToOperation[token](...stack.splice(-tokenToOperation[token].argsAmount)));
+            const operation = tokenToOperation[token];
+            stack.push(operation(...stack.splice(-operation.argsCount)));
         } else if (token in varIndex) {
             stack.push(variable(token));
         } else if (token in tokenToConst) {
@@ -55,7 +56,6 @@ function parse (expression) {
         } else {
             stack.push(cnst(token));
         }
-    };
-    expression.trim().split(/\s+/).forEach(parseToken);
+    }
     return stack.pop();
 }
