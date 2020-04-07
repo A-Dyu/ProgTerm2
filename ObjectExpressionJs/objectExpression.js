@@ -55,35 +55,57 @@ function createOperation(_op, _operator, _diffRule) {
     return constructor;
 }
 
-let Negate = createOperation(x => -x, "negate",
-    function (name, x) {
-        return new Negate(x.diff(name))
+let Negate = createOperation(
+    x => -x,
+    "negate",
+    function (name, x) {return new Negate(x.diff(name))
     });
 
-const Add = createOperation((a, b) => a + b, "+",
+const Add = createOperation(
+    (a, b) => a + b,
+    "+",
     function(name, a, b) { return new Add(a.diff(name), b.diff(name))});
 
-const Subtract = createOperation((a, b) => a - b, "-",
+const Subtract = createOperation(
+    (a, b) => a - b,
+    "-",
     function(name, a, b) { return new Subtract(a.diff(name), b.diff(name))});
 
-const Multiply = createOperation((a, b) => a * b, "*",
-    function(name, a, b) { return new Add(
-        new Multiply(a.diff(name), b), new Multiply(a, b.diff(name)))});
+const Multiply = createOperation(
+    (a, b) => a * b,
+    "*",
+    function(name, a, b) {
+        return new Add(
+            new Multiply(a.diff(name), b),
+            new Multiply(a, b.diff(name)))});
 
-const Divide = createOperation((a, b) => a / b, "/",
-    function(name, a, b) { return new Divide(
-        new Subtract(new Multiply(a.diff(name), b), new Multiply(a, b.diff(name))),
-        new Multiply(b, b))});
+const Divide = createOperation(
+    (a, b) => a / b,
+    "/",
+    function(name, a, b) {
+        return new Divide(
+            new Subtract(
+                new Multiply(a.diff(name), b),
+                new Multiply(a, b.diff(name))),
+            new Multiply(b, b))});
 
-const Gauss = createOperation((a, b, c, x) => a * Math.exp(-(x - b) * (x - b) / (2 * c * c)), "gauss",
-    function(name, a, b, c, x) { return new Add(
-        new Multiply(a.diff(name), new Gauss(Const.ONE, b, c, x)),
-        new Multiply(
-            a, new Multiply(
-                new Gauss(Const.ONE, b, c, x), Negate.prototype._diffRule(
-                    name, new Divide(
-                        new Multiply(new Subtract(x, b), new Subtract(x, b)),
-                        new Multiply(Const.TWO, new Multiply(c, c)))))))});
+const Gauss = createOperation(
+    (a, b, c, x) => a * Math.exp(-(x - b) * (x - b) / (2 * c * c)),
+    "gauss",
+    function(name, a, b, c, x) {
+        return new Add(
+            new Multiply(
+                a.diff(name),
+                new Gauss(Const.ONE, b, c, x)),
+            new Multiply(
+                a,
+                new Multiply(
+                    new Gauss(Const.ONE, b, c, x),
+                    Negate.prototype._diffRule(
+                        name,
+                        new Divide(
+                            new Multiply(new Subtract(x, b), new Subtract(x, b)),
+                            new Multiply(Const.TWO, new Multiply(c, c)))))))});
 
 const tokenToOperation = {
     "negate": Negate,
