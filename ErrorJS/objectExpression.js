@@ -150,41 +150,56 @@ function TokenError(pos, expected) {
 }
 TokenError.prototype = Object.create(ExpressionError.prototype);
 
-function parsePrefix(expression) {
-    expression = expression.trim();
-    const source = new Source(expression);
-    function getExpression() {
-        let token = source.nextToken();
-        if (!isNaN(+token)) {
-            return new Const(+token);
-        } else if (token in VAR_INDEX) {
-            return new Variable(token);
-        } else if (token === ")") {
-            throw new BracketError(source.getPos(), false, false);
-        } else if (token in TOKEN_TO_OPERATION) {
-            throw new BracketError(source.getPos(), true, true);
-        } else if (token === "(") {
-            token = source.nextToken();
-            if (!token in TOKEN_TO_OPERATION) {
-                throw new TokenError(source.getPos(), true);
+function UnexpectedFunctionError(pos) {
+    this.message = "Unexpected function at pos: " + pos;
+}
+UnexpectedFunctionError.prototype = Object.create(ExpressionError.prototype);
+
+const parsePrefix = getParser(parsePrefixBracket);
+
+function getParser(parseBracket) {
+    return function (expression) {
+        expression = expression.trim();
+        const source = new Source(expression);
+        function getExpression() {
+            let token = source.nextToken();
+            if (!isNaN(+token)) {
+                return new Const(+token);
+            } else if (token in VAR_INDEX) {
+                return new Variable(token);
+            } else if (token === ")") {
+                throw new BracketError(source.getPos(), false, false);
+            } else if (token in TOKEN_TO_OPERATION) {
+                throw new UnexpectedFunctionError(source.getPos());
+            } else if (token === "(") {
+                return parseBracket(source, getExpression);
+            } else {
+                throw new TokenError(source.getPos(), false);
             }
-            let operation = TOKEN_TO_OPERATION[token];
-            let args = [];
-            for (let i = 0; i < operation.prototype._op.length; i++) {
-                args.push(getExpression());
-            }
-            token = source.nextToken();
-            if (token !== ")") {
-                throw new BracketError(source.getPos(), true, false);
-            }
-            return new operation(...args);
         }
+        const res = getExpression();
+        if (source.getPos() !== expression.length) {
+            throw new TokenError(source.getPos, false);
+        }
+        return res;
     }
-    const res = getExpression();
-    if (source.getPos() !== expression.length) {
-        throw new TokenError(source.getPos, false);
+}
+
+function parsePrefixBracket(source, getExpression) {
+    let token = source.nextToken();
+    if (!token in TOKEN_TO_OPERATION) {
+        throw new TokenError(source.getPos(), false);
     }
-    return res;
+    let operation = TOKEN_TO_OPERATION[token];
+    let args = [];
+    for (let i = 0; i < operation.prototype._op.length; i++) {
+        args.push(getExpression());
+    }
+    token = source.nextToken();
+    if (token !== ")") {
+        throw new BracketError(source.getPos(), true, false);
+    }
+    return new operation(...args);
 }
 
 function Source(expression) {
@@ -209,7 +224,6 @@ function Source(expression) {
             }
             return token.join("");
         } else {
-
             for (let token in VAR_INDEX) {
                 if (checkToken(token)) {
                     return token;
