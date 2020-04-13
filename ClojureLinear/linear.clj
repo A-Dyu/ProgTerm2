@@ -1,14 +1,7 @@
-(defn funToElements [f]
-  (fn [a]
-    (loop [ans [] v a]
-      (if (== (count v) 0)
-        ans
-        (recur (conj ans (f (first v))) (rest v))))))
-
 (defn funByElements [f]
   (fn [& args]
     (if (== (count args) 1)
-       ((funToElements f) (first args))
+       (mapv  f (first args))
        (reduce
           (fn [a b]
             (loop [ans [] x a y b]
@@ -17,7 +10,7 @@
                 (recur (conj ans (f (first x) (first y))) (rest x) (rest y))))) args))))
 
 
-(defn getRow [m i] ((funToElements (fn [v] (nth v i))) m))
+(defn getRow [m i] (mapv (fn [v] (nth v i)) m))
 
 (defn vCheck [a b] (== (count a) (count b)))
 
@@ -27,7 +20,7 @@
 
 (defn v* [& args] (apply (funByElements *) args))
 
-(defn v*s [v & args] (reduce (fn [v x] ((funToElements (partial * x)) v)) v args))
+(defn v*s [v & args] (reduce (fn [v x] (mapv (partial * x) v)) v args))
 
 (defn scalar [a b] (reduce + (v* a b)))
 
@@ -43,9 +36,9 @@
 
 (defn m* [& args] (apply (funByElements v*) args))
 
-(defn m*s [m & args] (reduce (fn [m s] ((funToElements (fn [v] (v*s v s))) m)) m args))
+(defn m*s [m & args] (reduce (fn [m s] (mapv (fn [v] (v*s v s)) m)) m args))
 
-(defn m*v [m v] ((funToElements (fn [a] (reduce + (v* a v)))) m))
+(defn m*v [m v] (mapv (fn [a] (reduce + (v* a v))) m))
 
 (defn transpose [m]
   (loop [ans [] i 0]
