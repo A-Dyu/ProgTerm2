@@ -168,16 +168,30 @@ function InvalidTokenError(pos) {
 }
 InvalidTokenError.prototype = Object.create(ExpressionError.prototype);
 
-const parsePrefix = getParser(parsePrefixBracket);
+const parsePrefixBracket = (source, getExpression) => {
+    checkOperation(source);
+    const operation = TOKEN_TO_OPERATION[source.nextToken()];
+    const args = parseArgs(source, getExpression);
+    checkArgs(source, operation, args);
+    checkCloseBracket(source);
+    return new operation(...args);
+};
 
-const parsePostfix = getParser(parsePostfixBracket);
+const parsePostfixBracket = (source, getExpression) => {
+    const args = parseArgs(source, getExpression);
+    checkOperation(source);
+    const operation = TOKEN_TO_OPERATION[source.nextToken()];
+    checkArgs(source, operation, args);
+    checkCloseBracket(source);
+    return new operation(...args);
+};
 
-function getParser(parseBracket) {
-    return function (expression) {
+const getParser = (parseBracket) => {
+    return (expression) => {
         expression = expression.trim();
         const source = new Source(expression);
         function getExpression() {
-            let token = source.nextToken();
+            const token = source.nextToken();
             if (!isNaN(+token)) {
                 return new Const(+token);
             } else if (token in VAR_INDEX) {
@@ -198,29 +212,15 @@ function getParser(parseBracket) {
         }
         return res;
     }
-}
+};
 
-function parsePrefixBracket(source, getExpression) {
-    checkOperation(source);
-    const operation = TOKEN_TO_OPERATION[source.nextToken()];
-    const args = parseArgs(source, getExpression);
-    checkArgs(source, operation, args);
-    checkCloseBracket(source);
-    return new operation(...args);
-}
+const parsePrefix = getParser(parsePrefixBracket);
 
-function parsePostfixBracket(source, getExpression) {
-    const args = parseArgs(source, getExpression);
-    checkOperation(source);
-    const operation = TOKEN_TO_OPERATION[source.nextToken()];
-    checkArgs(source, operation, args);
-    checkCloseBracket(source);
-    return new operation(...args);
-}
+const parsePostfix = getParser(parsePostfixBracket);
 
 function Source(expression) {
     let pos = 0;
-    const _nextToken = function() {
+    const _nextToken = () => {
         while (expression[pos] === " ") {
             pos++;
         }
@@ -253,7 +253,7 @@ function Source(expression) {
             throw new InvalidTokenError(pos);
         }
     };
-    function checkToken(token) {
+    const checkToken = (token) => {
         for (let i = 0; i < token.length; i++) {
             if (expression[pos + i] !== token[i]) {
                 return false;
@@ -261,7 +261,7 @@ function Source(expression) {
         }
         pos = pos + token.length;
         return true;
-    }
+    };
     let curToken = _nextToken();
     this.checkNextToken = () => curToken;
     this.nextToken = () => {
