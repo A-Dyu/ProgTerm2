@@ -144,17 +144,17 @@ function ExpressionError(message) {
 ExpressionError.prototype = Object.create(Error.prototype);
 
 function BracketError(pos, isExpected, isOpen) {
-    this.message = (isExpected ? "Expected " : "Unexpected ") + (isOpen ? "open " : "close ") + "bracket at pos: " + pos;
+    this.message = getExpected(isExpected) + getOpen(isOpen) + "bracket at pos: " + pos;
 }
 BracketError.prototype = Object.create(ExpressionError.prototype);
 
-function TokenError(pos, isExpected) {
-    this.message = (isExpected ? "Expected " : "Unexpected ") + "token at pos: " + pos;
+function TokenError(pos, isExpected, token) {
+    this.message = getExpected(isExpected) + "token " + (!isExpected ? "(" + token + ") " : "") + "at pos: " + pos;
 }
 TokenError.prototype = Object.create(ExpressionError.prototype);
 
 function OperationError(pos, isExpected) {
-    this.message = (isExpected ? "Expected " : "Unexpected ") + "operation at pos: " + pos;
+    this.message = getExpected(isExpected) + "operation at pos: " + pos;
 }
 OperationError.prototype = Object.create(ExpressionError.prototype);
 
@@ -163,28 +163,14 @@ function UnsupportedArgumentsError(pos, op) {
 }
 UnsupportedArgumentsError.prototype = Object.create(ExpressionError.prototype);
 
-function InvalidTokenError(pos) {
-    this.message = "Invalid token at pos: " + pos;
+function InvalidTokenError(pos, token) {
+    this.message = "Invalid token (" + token + ") at pos: " + pos;
 }
 InvalidTokenError.prototype = Object.create(ExpressionError.prototype);
 
-const parsePrefixBracket = (source, getExpression) => {
-    checkOperation(source);
-    const operation = TOKEN_TO_OPERATION[source.nextToken()];
-    const args = parseArgs(source, getExpression);
-    checkArgs(source, operation, args);
-    checkCloseBracket(source);
-    return new operation(...args);
-};
-
-const parsePostfixBracket = (source, getExpression) => {
-    const args = parseArgs(source, getExpression);
-    checkOperation(source);
-    const operation = TOKEN_TO_OPERATION[source.nextToken()];
-    checkArgs(source, operation, args);
-    checkCloseBracket(source);
-    return new operation(...args);
-};
+const getMessageGetter = (iff, els) => (fl) => (fl ? iff : els)
+const getExpected = getMessageGetter("Expected ", "Unexpected ");
+const getOpen = getMessageGetter("open ", "close ");
 
 const getParser = (parseBracket) => {
     return (expression) => {
@@ -203,15 +189,29 @@ const getParser = (parseBracket) => {
             } else if (token === "(") {
                 return parseBracket(source, getExpression);
             } else {
-                throw new TokenError(source.getPos(), false);
+                throw new TokenError(source.getPos(), false, token);
             }
         }
         const res = getExpression();
         if (source.checkNextToken() !== undefined) {
-            throw new TokenError(source.getPos(), false);
+            throw new TokenError(source.getPos(), false, source.checkNextToken());
         }
         return res;
     }
+};
+
+const parsePrefixBracket = (source, getExpression) => {
+    const operation = getOperation(source);
+    const args = parseArgs(source, getExpression);
+    checkBracket(source, operation, args);
+    return new operation(...args);
+};
+
+const parsePostfixBracket = (source, getExpression) => {
+    const args = parseArgs(source, getExpression);
+    const operation = getOperation(source);
+    checkBracket(source, operation, args);
+    return new operation(...args);
 };
 
 const parsePrefix = getParser(parsePrefixBracket);
@@ -250,7 +250,9 @@ function Source(expression) {
                     return token;
                 }
             }
-            throw new InvalidTokenError(pos);
+            let token = [];
+            for (; expression[pos] !== " " && expression[pos] !== undefined; pos++) token.push(expression[pos]);
+            throw new InvalidTokenError(pos, token.join(""));
         }
     };
     const checkToken = (token) => {
@@ -281,26 +283,24 @@ const isDigit = (c) => {
 
 const parseArgs = (source, getExpression) => {
     let args = [];
-    while (!(source.checkNextToken() in TOKEN_TO_OPERATION || source.checkNextToken() === ")")) {
+    while (!(source.checkNextToken() in TOKEN_TO_OPERATION || source.checkNextToken() === ")" || source.checkNextToken() === undefined)) {
         args.push(getExpression());
     }
     return args;
 };
 
-const checkArgs = (source, operation, args) => {
+const checkBracket = (source, operation, args) => {
     if (operation.prototype._op.length !== 0 && args.length !== operation.prototype._op.length) {
         throw new UnsupportedArgumentsError(source.getPos(), operation.prototype._operator);
     }
-};
-
-const checkCloseBracket = (source) => {
     if (source.checkNextToken() !== ")") {
         throw new BracketError(source.getPos(), true, false);
     } else {source.nextToken();}
 };
 
-const checkOperation = (source) => {
+const getOperation = (source) => {
     if (!(source.checkNextToken() in TOKEN_TO_OPERATION)) {
         throw new OperationError(source.getPos(), true);
     }
+    return TOKEN_TO_OPERATION[source.nextToken()];
 };
