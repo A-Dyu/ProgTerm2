@@ -19,11 +19,11 @@
     (reduce (fn [v x] (mapv (partial * x) v)) v args))
 
 (defn scalar [a b]
-  {:pre [(isVector a) (isVector b) (== (count a) (count b))]}
+  {:pre [(isVector a) (isVector b) (checkVectorsEqual [a b])]}
     (reduce + (v* a b)))
 
 (defn vect [& args]
-  {:pre [(every? isVector args) (checkVectorsEqual args) (== (count (first args)) 3)]}
+  {:pre [(every? isVector args) (every? (fn [x] (== (count x) 3)) args)]}
     (reduce (fn [a b] (letfn [(vectCord [x y] (- (* (nth a x) (nth b y)) (* (nth a y) (nth b x))))]
       (vector (vectCord 1 2) (vectCord 2 0) (vectCord 0 1)))) args))
 
@@ -38,13 +38,11 @@
     (reduce (fn [m s] (mapv (fn [v] (v*s v s)) m)) m args))
 
 (defn m*v [m v]
-  {:pre [(isMatrix m) (isVector v) (checkVectorsEqual [(first m) v])]}
+  {:pre [(isMatrix m)]}
     (mapv (fn [a] (reduce + (v* a v))) m))
 
 (defn transpose [m]
   {:pre [(isMatrix m)]}
     (apply mapv vector m))
 
-(defn m*m [& args]
-  {:pre [(every? isMatrix args)]}
-    (reduce (fn [a b] (mapv (partial m*v (transpose b)) a)) args))
+(defn m*m [& args] (reduce (fn [a b] (mapv (partial m*v (transpose b)) a)) args))
