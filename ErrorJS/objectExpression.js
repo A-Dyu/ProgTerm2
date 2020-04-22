@@ -1,6 +1,6 @@
 "use strict";
 
-function createExpression(constructor, evaluate, toString, diff, prefix, postfix) {
+function createExpression(constructor, evaluate, toString, diff, prefix = toString, postfix = toString) {
     constructor.prototype.evaluate = evaluate;
     constructor.prototype.toString = toString;
     constructor.prototype.diff = diff;
@@ -15,9 +15,7 @@ createExpression(
     Const,
     function() { return +this._value},
     function() { return "" + this._value},
-    function() { return Const.ZERO},
-    function() { return this.toString()},
-    function() { return this.toString()});
+    function() { return Const.ZERO});
 
 Const.ZERO = new Const(0);
 Const.ONE = new Const(1);
@@ -36,9 +34,7 @@ createExpression(
     Variable,
     function(...vars) { return vars[this._ind]},
     function() { return this._name},
-    function(name) { return this._name === name ? Const.ONE : Const.ZERO},
-    function() { return this.toString()},
-    function() { return this.toString()});
+    function(name) { return this._name === name ? Const.ONE : Const.ZERO});
 
 function Operation(...args) {
     this._args = args;
@@ -159,7 +155,7 @@ function OperationError(pos, isExpected) {
 OperationError.prototype = Object.create(ExpressionError.prototype);
 
 function UnsupportedArgumentsError(pos, op) {
-    this.message = "Operator (" + op + ") at pos: " + pos + " can't apply such arguments";
+    this.message = "Operator (" + op + ") at pos " + pos + " can't apply such arguments";
 }
 UnsupportedArgumentsError.prototype = Object.create(ExpressionError.prototype);
 
