@@ -1,4 +1,4 @@
-(defn checkVectorsEqual [args] (every? (partial == (count (first args))) (mapv count args)))
+(defn checkVectorsEqual [args] (or (every? number? args) (and (every? vector? args) (every? (partial == (count (first args))) (mapv count args)))))
 
 (defn isVector [v] (and (vector? v) (every? number? v)))
 
@@ -6,7 +6,7 @@
 
 (defn funByElements [f args checkArgs]
   {:pre [(checkVectorsEqual args) (every? checkArgs args)]}
-    (apply mapv f args))
+  (if (every? number? args) (apply f args) (apply mapv f args)))
 
 (defn v+ [& args] (funByElements + args isVector))
 
@@ -46,3 +46,24 @@
     (apply mapv vector m))
 
 (defn m*m [& args] (reduce (fn [a b] (mapv (partial m*v (transpose b)) a)) args))
+
+(defn broadcast [args]
+  {:post [(fn [args] (if (every? number? args) true (and (checkVectorsEqual args) (recur (mapv first args)))))]}
+  (letfn [(getLevel [t] (if (number? t) 0 (+ (getLevel (first t)) 1)))
+           (getMaxByType [& args] (if (== (count args) 1) (first args)
+            (let [mx (apply getMaxByType (rest args)) mxt (getLevel mx) curt (getLevel (first args))]
+              (if (> mxt curt)
+                mx
+                (first args)))))
+           (castTensor [a b] (if (== (getLevel a) (getLevel b)) a (apply vector (repeat (count b) (castTensor a (first b))))))]
+    (mapv (fn [a] (castTensor a (apply getMaxByType args))) args)))
+
+(defn tensOp [op tOp args] (if (every? number? args) (funByElements op args identity) (funByElements tOp args identity)))
+
+(defn b+ [& args] (tensOp + b+ (broadcast args)))
+
+(defn b- [& args] (tensOp - b- (broadcast args)))
+
+(defn b* [& args] (tensOp * b* (broadcast args)))
+
+(defn bd [& args] (tensOp / bd (broadcast args)))
