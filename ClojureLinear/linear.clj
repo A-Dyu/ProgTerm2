@@ -22,7 +22,7 @@
 
 (defn scalar [a b]
   {:pre [(isVector? a) (isVector? b) (checkVectorsEqual [a b])]}
-    (reduce + (v* a b)))
+    (apply + (v* a b)))
 
 (defn vect [& args]
   {:pre [(every? isVector? args) (every? (fn [x] (== (count x) 3)) args)]}
@@ -41,7 +41,7 @@
 
 (defn m*v [m v]
   {:pre [(isMatrix? m)]}
-    (mapv (fn [a] (reduce + (v* a v))) m))
+    (mapv (partial apply +) (mapv (partial v* v) m)))
 
 (defn transpose [m]
   {:pre [(isMatrix? m)]}
