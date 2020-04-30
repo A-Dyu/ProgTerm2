@@ -18,7 +18,7 @@
 
 (defn v*s [v & args]
   {:pre [(isVector? v) (every? number? args)]}
-    (reduce (fn [v x] (mapv (partial * x) v)) v args))
+    (mapv (partial * (apply * args)) v))
 
 (defn scalar [a b]
   {:pre [(isVector? a) (isVector? b) (checkVectorsEqual [a b])]}
@@ -37,7 +37,7 @@
 
 (defn m*s [m & args]
   {:pre [(isMatrix? m) (every? number? args)]}
-    (reduce (fn [m s] (mapv (fn [v] (v*s v s)) m)) m args))
+    (mapv (fn [v] (apply v* v args)) m))
 
 (defn m*v [m v]
   {:pre [(isMatrix? m)]}
