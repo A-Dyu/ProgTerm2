@@ -6,48 +6,59 @@
 
 (defn isTensor? [t] (or (every? number? t) (and (checkVectorsEqual t) (every? isTensor? t))))
 
-(defn funByElements [f args checkArgs]
-  {:pre [(checkVectorsEqual args) (every? checkArgs args)]}
-    (if (every? number? args) (apply f args) (apply mapv f args)))
+(defn funByElements [f checkArgs]
+  (fn [& args]
+    {:pre [(checkVectorsEqual args) (every? checkArgs args)]
+     :post [(checkArgs %)]}
+      (if (every? number? args) (apply f args) (apply mapv f args))))
 
-(defn v+ [& args] (funByElements + args isVector?))
+(def v+ (funByElements + isVector?))
 
-(defn v- [& args] (funByElements - args isVector?))
+(def v- (funByElements - isVector?))
 
-(defn v* [& args] (funByElements * args isVector?))
+(def v* (funByElements * isVector?))
 
 (defn v*s [v & args]
-  {:pre [(isVector? v) (every? number? args)]}
+  {:pre [(isVector? v) (every? number? args)]
+   :post [(isVector? %)]}
     (mapv (partial * (apply * args)) v))
 
 (defn scalar [a b]
-  {:pre [(isVector? a) (isVector? b) (checkVectorsEqual [a b])]}
+  {:pre [(isVector? a) (isVector? b) (checkVectorsEqual [a b])]
+   :post [(number? %)]}
     (apply + (v* a b)))
 
 (defn vect [& args]
-  {:pre [(every? isVector? args) (every? (fn [x] (== (count x) 3)) args)]}
+  {:pre [(every? isVector? args) (every? (fn [x] (== (count x) 3)) args)]
+   :post [(isVector? %)]}
     (reduce (fn [a b] (letfn [(vectCord [x y] (- (* (nth a x) (nth b y)) (* (nth a y) (nth b x))))]
       (vector (vectCord 1 2) (vectCord 2 0) (vectCord 0 1)))) args))
 
-(defn m+ [& args] (funByElements v+ args isMatrix?))
+(def m+ (funByElements v+ isMatrix?))
 
-(defn m- [& args] (funByElements v- args isMatrix?))
+(def m- (funByElements v- isMatrix?))
 
-(defn m* [& args] (funByElements v* args isMatrix?))
+(def m* (funByElements v* isMatrix?))
 
 (defn m*s [m & args]
-  {:pre [(isMatrix? m) (every? number? args)]}
+  {:pre [(isMatrix? m) (every? number? args)]
+   :post [(isMatrix? %)]}
     (mapv (fn [v] (apply v* v args)) m))
 
 (defn m*v [m v]
-  {:pre [(isMatrix? m)]}
+  {:pre [(isMatrix? m)]
+   :post [(isVector? %)]}
     (mapv (partial apply +) (mapv (partial v* v) m)))
 
 (defn transpose [m]
-  {:pre [(isMatrix? m)]}
+  {:pre [(isMatrix? m)]
+   :post [(isMatrix? %)]}
     (apply mapv vector m))
 
-(defn m*m [& args] (reduce (fn [a b] (mapv (partial m*v (transpose b)) a)) args))
+(defn m*m [& args]
+  {:pre [(every? isMatrix? args)]
+   :post [(isMatrix? %)]}
+    (reduce (fn [a b] (mapv (partial m*v (transpose b)) a)) args))
 
 (defn broadcast [args]
   { :pre [(every? isTensor? args)]
@@ -61,12 +72,12 @@
              (castTensor [a b] (if (== (getLevel a) (getLevel b)) a (apply vector (repeat (count b) (castTensor a (first b))))))]
       (mapv (fn [a] (castTensor a (apply getMaxByType args))) args)))
 
-(defn tensOp [op tOp args] (if (every? number? args) (funByElements op args isTensor?) (funByElements tOp args isTensor?)))
+(defn tensOp [op tOp] (funByElements (fn [args] (if (every? number? args) (apply op args) (apply tOp args))) isTensor?))
 
-(defn b+ [& args] (tensOp + b+ (broadcast args)))
+(def b+ (tensOp + b+))
 
-(defn b- [& args] (tensOp - b- (broadcast args)))
+(def b- (tensOp - b-))
 
-(defn b* [& args] (tensOp * b* (broadcast args)))
+(def b* (tensOp * b*))
 
-(defn bd [& args] (tensOp / bd (broadcast args)))
+(def bd (tensOp / bd))
