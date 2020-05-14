@@ -1,17 +1,38 @@
-(defn checkVectorsEqual [args] (or (every? number? args) (and (every? vector? args) (every? (partial == (count (first args))) (mapv count args)))))
+(defn checkVectorsEqual [args]
+    (and
+     (every? vector? args)
+     (every? (partial == (count (first args))) (mapv count args))))
 
-(defn isVector? [v] (and (vector? v) (every? number? v)))
+(defn isVector? [v]
+  (and
+   (vector? v)
+   (every? number? v)))
 
-(defn isMatrix? [m] (and (vector? m) (every? isVector? m) (checkVectorsEqual m)))
+(defn isMatrix? [m]
+  (and
+   (vector? m)
+   (every? isVector? m)
+   (checkVectorsEqual m)))
 
-(defn isTensor? [t] (or (number? t) (and (checkVectorsEqual t) (every? isTensor? t))))
+(defn getShape [t]
+  (cond
+   (number? t)
+    []
+   (vector? t)
+    (let[shape (getShape (first t))]
+      (if
+        (apply = shape (mapv getShape (rest t)))
+          (cons (count t) shape)))))
 
+
+(defn isTensor? [t]
+  (not (nil? (getShape t))))
 
 (defn funByElements [f checkArgs]
   (fn [& args]
     {:pre [(or (every? number? args) (checkVectorsEqual args)) (every? checkArgs args)]
      :post [(checkArgs %)]}
-    (if (every? number? args) (apply f args) (apply mapv f args))))
+    (apply mapv f args)))
 
 (def v+ (funByElements + isVector?))
 
@@ -32,7 +53,10 @@
 (defn vect [& args]
   {:pre [(every? isVector? args) (every? (fn [x] (== (count x) 3)) args)]
    :post [(isVector? %)]}
-    (reduce (fn [a b] (letfn [(vectCord [x y] (- (* (nth a x) (nth b y)) (* (nth a y) (nth b x))))]
+    (reduce (fn [a b]
+              (letfn [
+                       (vectCord [x y]
+                                 (- (* (nth a x) (nth b y)) (* (nth a y) (nth b x))))]
       (vector (vectCord 1 2) (vectCord 2 0) (vectCord 0 1)))) args))
 
 (def m+ (funByElements v+ isMatrix?))
@@ -63,34 +87,27 @@
 
 (defn broadcast [args]
   {:pre [(every? isTensor? args)]
-   :post [(fn [args]
-            (if (every? number? args)
-              true
-              (and
-               (checkVectorsEqual args)
-               (recur (mapv first args)))))]}
+   :post [(apply = (mapv getShape %))]}
     (letfn [(getLevel [t]
                       (if (number? t)
                         0
                         (+ (getLevel (first t)) 1)))
-             (getMaxByType [& args]
-                           (if (== (count args) 1)
-                             (first args)
-                              (let [mx (apply getMaxByType (rest args))]
-                                (if (> (getLevel mx) (getLevel (first args)))
-                                  mx
-                                  (first args)))))
-             (castTensor [a b]
-                         (if (== (getLevel a) (getLevel b))
-                           a
-                           (apply vector (repeat (count b) (castTensor a (first b))))))]
-      (mapv (fn [a] (castTensor a (apply getMaxByType args))) args)))
+             (getMaxShape [args]
+                          (apply max-key count (mapv getShape args)))
+             (castTensor [maxShape a]
+                         (let [level (getLevel a)]
+                           (letfn [(recurCast [shape]
+                                    (if (== level (count shape))
+                                     a
+                                     (apply vector (repeat (first shape) (recurCast (rest shape))))))]
+                                  (recurCast maxShape))))]
+           (mapv (partial castTensor (getMaxShape args)) args)))
 
 (defn tensOp [op]
   (letfn [(recurOp [& args] (if (every? number? args)
                               (apply op args)
                               (apply mapv recurOp args)))]
-         (fn [& args] (if (every? number? args) (apply op args) (apply mapv recurOp (broadcast args))))))
+         (fn [& args] (apply recurOp (broadcast args)))))
 
 (def b+ (tensOp +))
 
