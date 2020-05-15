@@ -18,7 +18,7 @@
 (def subtract (operation -))
 (def multiply (operation *))
 (def divide (operation (fn
-                         ([x] (/ x))
+                         ([x] (/ (double x)))
                          ([x & rst] (reduce (fn [a b] (div a b)) x rst)))))
 
 (def sumexp (operation _sumexp))
@@ -106,22 +106,6 @@
                                       ONE
                                       ZERO))))))
 
-(defn Unary [op operator diffRule]
-  (let [_x (field :x)]
-    (constructor
-     (fn [this x]
-       (assoc this
-              :x x))
-     (expressionProt
-      (fn [this vars] (op (evaluate (_x this) vars)))
-      (fn [this] (str "(" operator " " (toString (_x this)) ")"))
-      (fn [this name] (diffRule (_x this) name))))))
-
-(def Negate (Unary
-             -
-             'negate
-             (fn [x name] (Negate (diff x name)))))
-
 (def OperationProt (let [_op (field :op)
                          _operator (field :operator)
                          _diffRule (field :diffRule)
@@ -140,6 +124,11 @@
      :op op
      :operator operator
      :diffRule diffRule}))
+
+(def Negate (Operation
+             -
+             'negate
+             (fn [args name] (Negate (diff (first args) name)))))
 
 (def Add (Operation
            +
@@ -161,7 +150,7 @@
 
 (def Divide (Operation
              (fn
-               ([x] (/ x))
+               ([x] (/ (double x)))
                ([x & rst] (reduce (fn [a b] (div a b)) x rst)))
              '/
              (fn [args name]
