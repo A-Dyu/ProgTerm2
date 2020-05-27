@@ -5,6 +5,8 @@
 (def exp #(Math/exp %))
 (defn _sumexp [& args] (apply + (mapv exp args)))
 (defn div [a b] (/ (double a) (double b)))
+(defn _divide ([x] (/ (double x)))
+              ([x & rst] (reduce div x rst)))
 
 (defn constant [value] (constantly value))
 
@@ -16,9 +18,7 @@
 (def add (operation +))
 (def subtract (operation -))
 (def multiply (operation *))
-(def divide (operation (fn
-                         ([x] (/ (double x)))
-                         ([x & rst] (reduce div x rst)))))
+(def divide (operation _divide))
 
 (def sumexp (operation _sumexp))
 (def softmax (operation (fn [& args]
@@ -168,64 +168,68 @@
                '-
                (fn [args d_args] (apply Subtract d_args))))
 
-(def Multiply (Operation
-                *
-               '*
-               (fn [args d_args]
-                   (apply Add
-                          (mapv #(apply Multiply (assoc args % (d_args %)))
-                                (range (count args)))))))
+(declare Multiply)
+(defn mul_diff [args d_args]
+  (second (reduce
+           (fn [[a da] [b db]] [(Multiply a b)
+                                (Add (Multiply da b) (Multiply a db))])
+           (mapv vector args d_args))))
+(def Multiply (Operation * '* mul_diff))
 
-(declare _div_der)
-(def Divide (Operation
-             (fn
-               ([x] (/ (double x)))
-               ([x & rst] (reduce (fn [a b] (div a b)) x rst)))
-             '/
-             (fn [args d_args]
-               (letfn [(f_num [a c]
-                              (if (== (count a) 1)
-                                c
-                                (first a)))
-                       (f_denom [a]
-                                (if (== (count a) 1)
-                                  (apply Multiply a)
-                                  (apply Multiply (rest a))))]
-                      (let [num (f_num args ONE) d_num (f_num d_args ZERO)
-                            denom (f_denom args) d_denom (f_denom d_args)]
-                 (_div_der num denom d_num d_denom))))))
-
-(defn _div_der [num denom d_num d_denom]
-  (Divide
-   (Subtract
-    (Multiply
-     d_num
-     denom)
-    (Multiply
-     num
-     d_denom))
-   (Multiply
-    denom
-    denom)))
+(declare Divide)
+(defn div_diff [[x & rest_x] [dx & rest_dx]]
+  (let [rest (apply Multiply rest_x)
+        diff_rest (mul_diff rest_x rest_dx)]
+    (if (empty? rest_x)
+      (Negate (Divide dx (Multiply x x)))
+      (Divide
+       (Subtract
+        (Multiply
+         dx
+         rest)
+        (Multiply
+         x
+         diff_rest))
+       (Multiply rest rest)))))
+(def Divide (Operation _divide '/ div_diff))
 
 (declare Sumexp)
 (defn diff_sumexp [args d_args]
                     (apply Add
                            (mapv (fn [x y] (Multiply (Sumexp x) y))
                                  args d_args)))
-(def Sumexp (Operation
-             _sumexp
-             'sumexp
-             diff_sumexp))
+(def Sumexp (Operation _sumexp 'sumexp diff_sumexp))
 
 (def Softmax (Operation
               (fn [& args]
                  (div (exp (first args)) (apply _sumexp args)))
               'softmax
               (fn [args d_args]
-                  (let [num (Sumexp (first args)) d_num (diff_sumexp (vector (first args)) (vector (first d_args)))
-                      denom (apply Sumexp args) d_denom (diff_sumexp args d_args)]
-                  (_div_der num denom d_num d_denom)))))
+                  (div_diff [(Sumexp (first args))
+                             (apply Sumexp args)]
+                            [(diff_sumexp (vector (first args)) (vector (first d_args)))
+                             (diff_sumexp args d_args)]))))
+
+; objects for HW 12 ;
+; ***************** ;
+(defn bit-func [f]
+  (fn [& args]
+    (Double/longBitsToDouble (apply f (mapv #(Double/doubleToLongBits %) args)))))
+(def And (Operation (bit-func bit-and) '& nil))
+(def Xor (Operation (bit-func bit-xor) (symbol "^") nil))
+(def Or (Operation (bit-func bit-or) '| nil))
+(def Impl (Operation
+           (bit-func (fn [& args]
+                       (reduce (fn [a b] (bit-or (bit-not a) b)) args)))
+           '=>
+           nil))
+(def Iff (Operation
+          (bit-func (fn [& args]
+                      (bit-not (apply bit-xor args))))
+          '<=>
+          nil))
+; ***************** ;
+
 
 (def TOKEN_TO_OBJ {
                    '+ Add
@@ -234,7 +238,12 @@
                    '/ Divide
                    'negate Negate
                    'sumexp Sumexp
-                   'softmax Softmax})
+                   'softmax Softmax
+                   '& And
+                   (symbol "^") Xor
+                   '| Or
+                   '=> Impl
+                   '<=> Iff})
 
 (def parseObject (parseProt TOKEN_TO_OBJ Constant Variable))
 
@@ -298,6 +307,7 @@
 (def *all-chars (mapv char (range 32 128)))
 (def *letter (+char (apply str (filter #(Character/isLetter %) *all-chars))))
 ;;; end of library block ;;;
+
 (def *number (+seqf
               (fn [sign left dot right] (read-string (str sign (apply str left) dot (apply str right))))
               (+opt (+char "+-"))
@@ -323,8 +333,8 @@
            (rec (first factor)))))
 
 (declare *bracket)
-(def *factor (+map apply_unary
-                   (+seq
+(def *single_value
+  (+map apply_unary (+seq
                     *ws
                     (+star
                      (+map first
@@ -332,38 +342,55 @@
                     *ws
                     (+or *constant *variable (delay *bracket)))))
 
-(defn apply_binary [bin]
-  (reduce (fn [x op]
-            ((first op) x (second op)))
-          (first bin) (second bin)))
+(defn apply_left_binary [bin]
+  (reduce
+   (fn [a b] ((first b) a (second b)))
+   (first bin)
+   (partition 2 (rest bin))))
 
-(defn +seq_op [*value *operator]
-  (+map apply_binary
-        (+seq
-         *ws
-         *value
-         (+star
-          (+seq *ws *operator *ws *value))
-         *ws)))
+(defn apply_right_binary [rbin]
+  (let [bin (reverse rbin)]
+    (reduce
+     (fn [a b] ((first b) (second b) a))
+     (first bin)
+     (partition 2 (rest bin)))))
+
+(defn +seq_op [_apply *value *operator]
+  (+map _apply (+map flatten (+seq *ws *value *ws (+star (+seq *operator *ws *value *ws))))))
+
+(defn +seq_left_op [*value *operator]
+  (+seq_op apply_left_binary *value *operator))
+
+(defn +seq_right_op [*value *operator]
+  (+seq_op apply_right_binary *value *operator))
 
 (def *multiply (+op (+char "*")))
 (def *divide (+op (+char "/")))
-(def MUPLTIPLICATOR_OPS [*multiply
-                         *divide])
-(def *multiplicator (apply +or MUPLTIPLICATOR_OPS))
+(def *multiplicator (+or *multiply *divide))
 
-(def *term (+seq_op *factor *multiplicator))
+(def *term (+seq_left_op *single_value *multiplicator))
 
 (def *add (+op (+char "+")))
 (def *subtract (+op (+char "-")))
-(def ADDITION_OPS [*add
-                   *subtract])
-(def *additor (apply +or ADDITION_OPS))
+(def *additor (+or *add *subtract))
 
-(def *expression (+seq_op *term *additor))
+(def *term_seq (+seq_left_op *term *additor))
+
+(def *and (+op (+char "&")))
+(def *and_seq (+seq_left_op *term_seq *and))
+
+(def *or (+op (+char "|")))
+(def *or_seq (+seq_left_op *and_seq *or))
+
+(def *xor (+op (+char "^")))
+(def *xor_seq (+seq_left_op *or_seq *xor))
+
+(def *impl (+op (+seqf str (+char "=") (+char ">"))))
+(def *impl_seq (+seq_right_op *xor_seq *impl))
+
+(def *iff (+op (+seqf str (+char "<") (+char "=") (+char ">"))))
+(def *expression (+seq_left_op *impl_seq *iff))
 
 (def *bracket (+seqn 1 (+char "(") *expression (+char ")")))
 
 (def parseObjectInfix (+parser (+or *expression *bracket)))
-
-(println (parseObjectInfix "   x    "))
