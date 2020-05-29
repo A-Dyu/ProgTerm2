@@ -331,14 +331,15 @@
            (rec (first factor)))))
 
 (def *funcs (*operations ["negate"]))
-(declare *bracket)
+(declare *expression)
+(def *bracket (+seqn 1 (+char "(") (delay *expression) (+char ")")))
 (def *single_value
   (+map apply_func
         (+seq *ws
          (+star
           (+map first (+seq *funcs *ws)))
          *ws
-         (+or *constant *variable (delay *bracket)))))
+        (+or *constant *variable *bracket))))
 
 (defn base_apply [f args]
   (reduce
@@ -377,7 +378,5 @@
            [+left_assoc ["^"]]
            [+right_assoc ["=>"]]
            [+left_assoc ["<=>"]]]))
-
-(def *bracket (+seqn 1 (+char "(") *expression (+char ")")))
 
 (def parseObjectInfix (+parser (+or *expression *bracket)))
