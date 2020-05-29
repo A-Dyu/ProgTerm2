@@ -120,9 +120,7 @@
                      (fn [this vars]
                        (apply
                         (_op this)
-                        (mapv
-                         #(evaluate % vars)
-                         (_args this))))
+                        (mapv #(evaluate % vars) (_args this))))
                      (fn [this]
                        (str
                         "("
@@ -184,12 +182,8 @@
       (Negate (Divide dx (Multiply x x)))
       (Divide
        (Subtract
-        (Multiply
-         dx
-         rest)
-        (Multiply
-         x
-         diff_rest))
+        (Multiply dx rest)
+        (Multiply x diff_rest))
        (Multiply rest rest)))))
 (def Divide (Operation _divide '/ div_diff))
 
@@ -215,6 +209,7 @@
 (defn bit-func [f]
   (fn [& args]
     (Double/longBitsToDouble (apply f (mapv #(Double/doubleToLongBits %) args)))))
+; :NOTE: копипаста
 (def And (Operation (bit-func bit-and) '& nil))
 (def Xor (Operation (bit-func bit-xor) (symbol "^") nil))
 (def Or (Operation (bit-func bit-or) '| nil))
@@ -315,16 +310,19 @@
               (+opt (+char "."))
               (+star *digit)))
 
+(defn +string [s]
+  (+map
+   (constantly (symbol s))
+   (apply +seq (mapv #(+char (str %)) s))))
+
 (def *variable (+map Variable (+str (+plus *letter))))
 (def *constant (+map (comp Constant double) *number))
 
-(defn +op [p] (+map (comp (partial get TOKEN_TO_OBJ) symbol str) p))
+(defn +op [operator] (+map (constantly (get TOKEN_TO_OBJ (symbol operator))) (+string operator)))
 
-(def TOKEN_TO_INFIX_UNARY {'- Negate})
-(def *negate (+op (+seqf str (+char "n") (+char "e") (+char "g") (+char "a") (+char "t") (+char "e"))))
-(def UNARY_OPS [*negate])
-(def *unary (apply +or UNARY_OPS))
-(defn apply_unary [factor]
+(defn *operations [ops] (apply +or (mapv +op ops)))
+
+(defn apply_func [factor]
   (let [val (second factor)]
     (letfn [(rec [ops]
                (if (== (count ops) 0)
@@ -332,64 +330,53 @@
                  ((first ops) (rec (rest ops)))))]
            (rec (first factor)))))
 
+(def *funcs (*operations ["negate"]))
 (declare *bracket)
 (def *single_value
-  (+map apply_unary (+seq
-                    *ws
-                    (+star
-                     (+map first
-                           (+seq *unary *ws)))
-                    *ws
-                    (+or *constant *variable (delay *bracket)))))
+  (+map apply_func
+        (+seq *ws
+         (+star
+          (+map first (+seq *funcs *ws)))
+         *ws
+         (+or *constant *variable (delay *bracket)))))
 
-(defn apply_left_binary [bin]
+(defn base_apply [f args]
   (reduce
+   f
+   (first args)
+   (partition 2 (rest args))))
+
+(defn apply_left_binary [args]
+  (base_apply
    (fn [a b] ((first b) a (second b)))
-   (first bin)
-   (partition 2 (rest bin))))
+   args))
 
-(defn apply_right_binary [rbin]
-  (let [bin (reverse rbin)]
-    (reduce
-     (fn [a b] ((first b) (second b) a))
-     (first bin)
-     (partition 2 (rest bin)))))
+(defn apply_right_binary [args]
+  (base_apply
+   (fn [a b] ((first b) (second b) a))
+   (reverse args)))
 
-(defn +seq_op [_apply *value *operator]
-  (+map _apply (+map flatten (+seq *ws *value *ws (+star (+seq *operator *ws *value *ws))))))
+(defn +seq_op [_apply]
+  (fn [*value ops]
+    (+map _apply (+map flatten (+seq *ws *value *ws (+star (+seq (*operations ops) *ws *value *ws)))))))
 
-(defn +seq_left_op [*value *operator]
-  (+seq_op apply_left_binary *value *operator))
+(def +left_assoc
+  (+seq_op apply_left_binary))
 
-(defn +seq_right_op [*value *operator]
-  (+seq_op apply_right_binary *value *operator))
+(def +right_assoc
+  (+seq_op apply_right_binary))
 
-(def *multiply (+op (+char "*")))
-(def *divide (+op (+char "/")))
-(def *multiplicator (+or *multiply *divide))
-
-(def *term (+seq_left_op *single_value *multiplicator))
-
-(def *add (+op (+char "+")))
-(def *subtract (+op (+char "-")))
-(def *additor (+or *add *subtract))
-
-(def *term_seq (+seq_left_op *term *additor))
-
-(def *and (+op (+char "&")))
-(def *and_seq (+seq_left_op *term_seq *and))
-
-(def *or (+op (+char "|")))
-(def *or_seq (+seq_left_op *and_seq *or))
-
-(def *xor (+op (+char "^")))
-(def *xor_seq (+seq_left_op *or_seq *xor))
-
-(def *impl (+op (+seqf str (+char "=") (+char ">"))))
-(def *impl_seq (+seq_right_op *xor_seq *impl))
-
-(def *iff (+op (+seqf str (+char "<") (+char "=") (+char ">"))))
-(def *expression (+seq_left_op *impl_seq *iff))
+(def *expression
+  (reduce (fn [*value [+seq_assoc_op ops]]
+            (+seq_assoc_op *value ops))
+          *single_value
+          [[+left_assoc ["*" "/"]]
+           [+left_assoc ["+" "-"]]
+           [+left_assoc ["&"]]
+           [+left_assoc ["|"]]
+           [+left_assoc ["^"]]
+           [+right_assoc ["=>"]]
+           [+left_assoc ["<=>"]]]))
 
 (def *bracket (+seqn 1 (+char "(") *expression (+char ")")))
 
