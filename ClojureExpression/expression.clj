@@ -1,7 +1,3 @@
-;***************;
-;     HW 10     ;
-;***************;
-
 (def exp #(Math/exp %))
 (defn _sumexp [& args] (apply + (mapv exp args)))
 (defn div [a b] (/ (double a) (double b)))
@@ -48,11 +44,6 @@
                (parse (read-string expression)))))
 
 (def parseFunction (parseProt TOKEN_TO_OP constant variable))
-
-
-;***************;
-;     HW 11     ;
-;***************;
 
 (defn proto-get [obj key]
   (cond
@@ -203,13 +194,9 @@
                              (apply Sumexp args)]
                             [(diff_sumexp (vector (first args)) (vector (first d_args)))
                              (diff_sumexp args d_args)]))))
-
-; objects for HW 12 ;
-; ***************** ;
 (defn bit-func [f]
   (fn [& args]
     (Double/longBitsToDouble (apply f (mapv #(Double/doubleToLongBits %) args)))))
-; :NOTE: копипаста
 (def And (Operation (bit-func bit-and) '& nil))
 (def Xor (Operation (bit-func bit-xor) (symbol "^") nil))
 (def Or (Operation (bit-func bit-or) '| nil))
@@ -223,7 +210,6 @@
                       (bit-not (apply bit-xor args))))
           '<=>
           nil))
-; ***************** ;
 
 
 (def TOKEN_TO_OBJ {
@@ -242,64 +228,88 @@
 
 (def parseObject (parseProt TOKEN_TO_OBJ Constant Variable))
 
-
-;***************;
-;     HW 12     ;
-;***************;
-
-;;; start of library block ;;;
+;;; start of combinator library block ;;;
 (defn -return [value tail] {:value value :tail tail})
+
 (def -valid? boolean)
+
 (def -value :value)
+
 (def -tail :tail)
+
 (defn _show [result]
   (if (-valid? result) (str "-> " (pr-str (-value result)) " | " (pr-str (apply str (-tail result))))
     "!"))
+
 (defn tabulate [parser inputs]
   (run! (fn [input] (printf "    %-10s %s\n" (pr-str input) (_show (parser input)))) inputs))
+
 (defn _empty [value] (partial -return value))
+
 (defn _char [p]
   (fn [[c & cs]]
     (if (and c (p c)) (-return c cs))))
+
 (defn _map [f result]
   (if (-valid? result)
     (-return (f (-value result)) (-tail result))))
+
 (defn _combine [f a b]
   (fn [str]
     (let [ar ((force a) str)]
       (if (-valid? ar)
         (_map (partial f (-value ar))
               ((force b) (-tail ar)))))))
+
 (defn _either [a b]
   (fn [str]
     (let [ar ((force a) str)]
       (if (-valid? ar) ar ((force b) str)))))
+
 (defn _parser [p]
   (fn [input]
     (-value ((_combine (fn [v _] v) p (_char #{\u0000})) (str input \u0000)))))
+
 (defn +char [chars] (_char (set chars)))
+
 (defn +char-not [chars] (_char (comp not (set chars))))
+
 (defn +map [f parser] (comp (partial _map f) parser))
+
 (def +parser _parser)
+
 (def +ignore (partial +map (constantly 'ignore)))
+
 (defn iconj [coll value]
   (if (= value 'ignore) coll (conj coll value)))
+
 (defn +seq [& ps]
   (reduce (partial _combine iconj) (_empty []) ps))
+
 (defn +seqf [f & ps] (+map (partial apply f) (apply +seq ps)))
+
 (defn +seqn [n & ps] (apply +seqf (fn [& vs] (nth vs n)) ps))
+
 (defn +or [p & ps]
   (reduce _either p ps))
 (defn +opt [p]
   (+or p (_empty nil)))
+
 (defn +star [p]
   (letfn [(rec [] (+or (+seqf cons p (delay (rec))) (_empty ())))] (rec)))
+
 (defn +plus [p] (+seqf cons p (+star p)))
+
 (def *space (+char " \t\n\r"))
+
 (def *ws (+ignore (+star *space)))
+
 (defn +str [p] (+map (partial apply str) p))
+
 (def *digit (+char "0123456789"))
+
 (def *all-chars (mapv char (range 32 128)))
+
 (def *letter (+char (apply str (filter #(Character/isLetter %) *all-chars))))
 ;;; end of library block ;;;
 
@@ -379,4 +389,4 @@
            [+right_assoc ["=>"]]
            [+left_assoc ["<=>"]]]))
 
-(def parseObjectInfix (+parser (+or *expression *bracket)))
+(def parseObjectInfix (+parser *expression))
